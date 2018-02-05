@@ -5,6 +5,7 @@ import json as json
 import ast
 import jsontree
 import asttokens
+from xml.sax.saxutils import quoteattr
 
 def PrintUsage():
     sys.stderr.write("""
@@ -172,11 +173,11 @@ def write(i, indent_level = 0):
         if "value" in node:
             if "line_no" in node:
                 if "end_col" in node:
-                    lines.append("\t"*indent_level + "<" + node['type'] + ' value="' + quoteEscape(node["value"]) + '" lineno="' + str(node['line_no']) + '" col="' + str(node['col']) + '" end_line_no="' + str(node['end_line_no']) + '" end_col="' + str(node['end_col']) + '">')
+                    lines.append("\t"*indent_level + "<" + node['type'] + ' value=' + quoteEscape(node["value"]) + ' lineno="' + str(node['line_no']) + '" col="' + str(node['col']) + '" end_line_no="' + str(node['end_line_no']) + '" end_col="' + str(node['end_col']) + '">')
                 else:
-                    lines.append("\t"*indent_level + "<" + node['type'] + ' value="' + quoteEscape(node["value"]) + '" lineno="' + str(node['line_no']) + '" col="' + str(node['col']) + '">')
+                    lines.append("\t"*indent_level + "<" + node['type'] + ' value=' + quoteEscape(node["value"]) + ' lineno="' + str(node['line_no']) + '" col="' + str(node['col']) + '">')
             else:
-                lines.append("\t"*indent_level + "<" + node['type'] + ' value="' + quoteEscape(node["value"]) + '">')
+                lines.append("\t"*indent_level + "<" + node['type'] + ' value=' + quoteEscape(node["value"]) + '>')
         else:
             if "line_no" in node:
                 if "end_col" in node:
@@ -190,7 +191,7 @@ def write(i, indent_level = 0):
         lines.append("\t"*indent_level + "</" + node["type"] + ">")
 
 def quoteEscape(x):
-    return x.replace('"', "&quot;")
+    return quoteattr(x);
 
 def getFirstNonChildInd(tree, index):
     def getHelper(index):
