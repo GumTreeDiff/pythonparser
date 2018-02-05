@@ -1,3 +1,5 @@
+#!/usr/bin/env python2.7
+
 import sys
 import json as json
 import ast
@@ -41,11 +43,19 @@ def parse_file(filename):
                 pass
         return pos
 
-    def traverse_list(l, node_type = 'list'):
+    def traverse_list(l, node_type = 'list', node = None):
         pos = len(json_tree)
         json_node = {}
         json_tree.append(json_node)
         json_node['type'] = node_type
+        try:
+                json_node['line_no'] = str(node.lineno)
+                json_node['col'] = str(node.col_offset)
+        except:
+            try:
+                json_node['line_no'] = str(node.first_token.start[0])
+                json_node['col'] = str(node.first_token.start[1])
+            except: pass
         children = []
         for item in l:
             children.append(traverse(item))
@@ -95,48 +105,48 @@ def parse_file(filename):
         if isinstance(node, ast.For):
             children.append(traverse(node.target))
             children.append(traverse(node.iter))
-            children.append(traverse_list(node.body, 'body'))
+            children.append(traverse_list(node.body, 'body', node))
             if node.orelse:
-                children.append(traverse_list(node.orelse, 'orelse'))
+                children.append(traverse_list(node.orelse, 'orelse', node))
         elif isinstance(node, ast.If) or isinstance(node, ast.While):
             children.append(traverse(node.test))
-            children.append(traverse_list(node.body, 'body'))
+            children.append(traverse_list(node.body, 'body', node))
             if node.orelse:
-                children.append(traverse_list(node.orelse, 'orelse'))
+                children.append(traverse_list(node.orelse, 'orelse', node))
         elif isinstance(node, ast.With):
             children.append(traverse(node.context_expr))
             if node.optional_vars:
                 children.append(traverse(node.optional_vars))
-            children.append(traverse_list(node.body, 'body'))
+            children.append(traverse_list(node.body, 'body', node))
         elif isinstance(node, ast.TryExcept):
-            children.append(traverse_list(node.body, 'body'))
-            children.append(traverse_list(node.handlers, 'handlers'))
+            children.append(traverse_list(node.body, 'body', node))
+            children.append(traverse_list(node.handlers, 'handlers', node))
             if node.orelse:
-                children.append(traverse_list(node.orelse, 'orelse'))
+                children.append(traverse_list(node.orelse, 'orelse', node))
         elif isinstance(node, ast.TryFinally):
-            children.append(traverse_list(node.body, 'body'))
-            children.append(traverse_list(node.finalbody, 'finalbody'))
+            children.append(traverse_list(node.body, 'body', node))
+            children.append(traverse_list(node.finalbody, 'finalbody', node))
         elif isinstance(node, ast.arguments):
-            children.append(traverse_list(node.args, 'args'))
-            children.append(traverse_list(node.defaults, 'defaults'))
+            children.append(traverse_list(node.args, 'args', node))
+            children.append(traverse_list(node.defaults, 'defaults', node))
             if node.vararg:
                 children.append(gen_identifier(node.vararg, 'vararg', node))
             if node.kwarg:
                 children.append(gen_identifier(node.kwarg, 'kwarg', node))
         elif isinstance(node, ast.ExceptHandler):
             if node.type:
-                children.append(traverse_list([node.type], 'type'))
+                children.append(traverse_list([node.type], 'type', node))
             if node.name:
-                children.append(traverse_list([node.name], 'name'))
-            children.append(traverse_list(node.body, 'body'))
+                children.append(traverse_list([node.name], 'name', node))
+            children.append(traverse_list(node.body, 'body', node))
         elif isinstance(node, ast.ClassDef):
-            children.append(traverse_list(node.bases, 'bases'))
-            children.append(traverse_list(node.body, 'body'))
-            children.append(traverse_list(node.decorator_list, 'decorator_list'))
+            children.append(traverse_list(node.bases, 'bases', node))
+            children.append(traverse_list(node.body, 'body', node))
+            children.append(traverse_list(node.decorator_list, 'decorator_list', node))
         elif isinstance(node, ast.FunctionDef):
             children.append(traverse(node.args))
-            children.append(traverse_list(node.body, 'body'))
-            children.append(traverse_list(node.decorator_list, 'decorator_list'))
+            children.append(traverse_list(node.body, 'body', node))
+            children.append(traverse_list(node.decorator_list, 'decorator_list', node))
         else:
             # Default handling: iterate over children.
             for child in ast.iter_child_nodes(node):
@@ -188,33 +198,41 @@ def getFirstNonChildInd(tree, index):
             return index
         return max([getHelper(i) for i in tree[index]['children']])
     return getHelper(index) + 1
-def addEnd(tree, i):
-    first_non_child = getFirstNonChildInd(tree, i)
+def getLast(text, i):
+    tree[i]["end_line_no"] = len(text.split('\n'))
+    tree[i]["end_col"] = len(text.split('\n')[-1])
+def addEnd(tree, i, text):
     try:
+        first_non_child = getFirstNonChildInd(tree, i)
         first_non_child_start = tree[first_non_child]["line_no"]
         first_non_child_col = tree[first_non_child]["col"]
-        try:
-            tree[i]["end_line_no"] = int(first_non_child_start)
-            tree[i]["end_col"] = int(first_non_child_col)
-        except: pass
-    except: pass
+        tree[i]["end_line_no"] = int(first_non_child_start)
+        tree[i]["end_col"] = int(first_non_child_col)
+        if first_non_child_col == "-1":
+            tree[first_non_child]["col"] = "0"
+            tree[i]["end_col"] = "0"
+    except:
+        getLast(text, i)
     for child in tree[i]['children']:
-        addEnd(tree, child)
+        addEnd(tree, child, text)
 
 
 
 
 if __name__ == "__main__":
     try:
+        text = open(sys.argv[1], "r+").read()
+
         json_file = parse_file(sys.argv[1])
         tree = jsontree.JSONTreeDecoder().decode(json_file)
 
         x = tree[0]
 
         lines = []
-        addEnd(tree, 0)
+        addEnd(tree, 0, text)
         write(0)
 
         print('\n'.join(lines))
+
     except (UnicodeEncodeError, UnicodeDecodeError):
         pass
