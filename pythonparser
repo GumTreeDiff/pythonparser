@@ -27,21 +27,20 @@ def parse_file(filename):
     tree = asttokens.ASTTokens(read_file_to_string(filename), parse=True).tree
 
     json_tree = []
+
+    def localize(node, json_node):
+        json_node['line_no'] = str(node.first_token.start[0])
+        json_node['col'] = str(node.first_token.start[1])
+        json_node['end_line_no'] = str(node.last_token.end[0])
+        json_node['end_col'] = str(node.last_token.end[1])
+
     def gen_identifier(identifier, node_type = 'identifier', node=None):
         pos = len(json_tree)
         json_node = {}
         json_tree.append(json_node)
         json_node['type'] = node_type
         json_node['value'] = identifier
-        try:
-            json_node['line_no'] = str(node.lineno)
-            json_node['col'] = str(node.col_offset)
-        except:
-            try:
-                json_node['line_no'] = str(node.first_token.start[0])
-                json_node['col'] = str(node.first_token.start[1])
-            except:
-                pass
+        localize(node, json_node)
         return pos
 
     def traverse_list(l, node_type = 'list', node = None):
@@ -49,19 +48,7 @@ def parse_file(filename):
         json_node = {}
         json_tree.append(json_node)
         json_node['type'] = node_type
-        try:
-                json_node['line_no'] = str(node.lineno)
-                json_node['col'] = str(node.col_offset)
-        except:
-            try:
-                json_node['line_no'] = str(node.first_token.start[0])
-                json_node['col'] = str(node.first_token.start[1])
-            except: pass
-        children = []
-        for item in l:
-            children.append(traverse(item))
-        if (len(children) != 0):
-            json_node['children'] = children
+        localize(node, json_node)
         return pos
 
     def traverse(node):
@@ -69,14 +56,8 @@ def parse_file(filename):
         json_node = {}
         json_tree.append(json_node)
         json_node['type'] = type(node).__name__
-        try:
-                json_node['line_no'] = str(node.lineno)
-                json_node['col'] = str(node.col_offset)
-        except:
-            try:
-                json_node['line_no'] = str(node.first_token.start[0])
-                json_node['col'] = str(node.first_token.start[1])
-            except: pass
+        localize(node, json_node)
+
         children = []
         if isinstance(node, ast.Name):
             json_node['value'] = node.id
@@ -202,22 +183,6 @@ def getFirstNonChildInd(tree, index):
 def getLast(text, i):
     tree[i]["end_line_no"] = len(text.split('\n'))
     tree[i]["end_col"] = len(text.split('\n')[-1])
-def addEnd(tree, i, text):
-    try:
-        first_non_child = getFirstNonChildInd(tree, i)
-        first_non_child_start = tree[first_non_child]["line_no"]
-        first_non_child_col = tree[first_non_child]["col"]
-        tree[i]["end_line_no"] = int(first_non_child_start)
-        tree[i]["end_col"] = int(first_non_child_col)
-        if first_non_child_col == "-1":
-            tree[first_non_child]["col"] = "0"
-            tree[i]["end_col"] = "0"
-    except:
-        getLast(text, i)
-    for child in tree[i]['children']:
-        addEnd(tree, child, text)
-
-
 
 
 if __name__ == "__main__":
@@ -227,10 +192,7 @@ if __name__ == "__main__":
         json_file = parse_file(sys.argv[1])
         tree = jsontree.JSONTreeDecoder().decode(json_file)
 
-        x = tree[0]
-
         lines = []
-        addEnd(tree, 0, text)
         write(0)
 
         print('\n'.join(lines))
