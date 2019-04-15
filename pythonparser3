@@ -82,6 +82,8 @@ def parse_file(filename):
                 children.append(gen_identifier(n, node = node))
         elif isinstance(node, ast.keyword):
             json_node['value'] = (node.arg)
+        elif isinstance(node, ast.arg):
+            json_node['value'] = (node.arg)
 
 
         # Process children.
@@ -110,9 +112,9 @@ def parse_file(filename):
             children.append(traverse_list(node.args, 'args', node))
             children.append(traverse_list(node.defaults, 'defaults', node))
             if node.vararg:
-                children.append(gen_identifier(node.vararg, 'vararg', node))
+                children.append(gen_identifier(node.vararg.arg, 'vararg', node.arg))
             if node.kwarg:
-                children.append(gen_identifier(node.kwarg, 'kwarg', node))
+                children.append(gen_identifier(node.kwarg.arg, 'kwarg', node.kwarg))
         elif isinstance(node, ast.ExceptHandler):
             if node.type:
                 children.append(traverse_list([node.type], 'type', node))
