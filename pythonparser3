@@ -101,10 +101,12 @@ def parse_file(filename):
             if node.orelse:
                 children.append(traverse_list(node.orelse, 'orelse', node))
         elif isinstance(node, ast.With):
+            children.append(traverse_list(node.items, 'items', node))
+            children.append(traverse_list(node.body, 'body', node))
+        elif isinstance(node, ast.withitem):
             children.append(traverse(node.context_expr))
             if node.optional_vars:
                 children.append(traverse(node.optional_vars))
-            children.append(traverse_list(node.body, 'body', node))
         elif isinstance(node, ast.Try):
             children.append(traverse_list(node.body, 'body', node))
             children.append(traverse_list(node.handlers, 'handlers', node))
@@ -113,6 +115,8 @@ def parse_file(filename):
         elif isinstance(node, ast.arguments):
             children.append(traverse_list(node.args, 'args', node))
             children.append(traverse_list(node.defaults, 'defaults', node))
+            children.append(traverse_list(node.kwonlyargs, 'defaults', node))
+            children.append(traverse_list(node.kw_defaults, 'defaults', node))
             if node.vararg:
                 children.append(gen_identifier(node.vararg.arg, 'vararg', node.arg))
             if node.kwarg:
