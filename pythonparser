@@ -3,17 +3,10 @@
 import sys
 import json as json
 import ast
-import jsontree
 import asttokens
 from xml.sax.saxutils import quoteattr
+import argparse
 
-def PrintUsage():
-    sys.stderr.write("""
-Usage:
-    parse_python.py <file>
-
-""")
-    exit(1)
 
 def read_file_to_string(filename):
     f = open(filename, 'rt')
@@ -23,7 +16,6 @@ def read_file_to_string(filename):
 
 
 def parse_file(filename):
-    global c, d
     tree = asttokens.ASTTokens(read_file_to_string(filename), parse=True).tree
 
     json_tree = []
@@ -49,6 +41,11 @@ def parse_file(filename):
         json_tree.append(json_node)
         json_node['type'] = node_type
         localize(node, json_node)
+        children = []
+        for item in l:
+            children.append(traverse(item))
+        if (len(children) != 0):
+            json_node['children'] = children
         return pos
 
     def traverse(node):
@@ -146,56 +143,38 @@ def parse_file(filename):
         return pos
 
     traverse(tree)
-    return json.dumps(json_tree, separators=(',', ':'), ensure_ascii=False)
+    return json_tree
 
-def write(i, indent_level = 0):
-        global lines
+
+def json2xml(tree):
+    lines = []
+    def convert_node(i, indent_level=0):
         node = tree[i]
-        if "value" in node:
-            if "line_no" in node:
-                if "end_col" in node:
-                    lines.append("\t"*indent_level + "<" + node['type'] + ' value=' + quoteEscape(node["value"]) + ' lineno="' + str(node['line_no']) + '" col="' + str(node['col']) + '" end_line_no="' + str(node['end_line_no']) + '" end_col="' + str(node['end_col']) + '">')
-                else:
-                    lines.append("\t"*indent_level + "<" + node['type'] + ' value=' + quoteEscape(node["value"]) + ' lineno="' + str(node['line_no']) + '" col="' + str(node['col']) + '">')
-            else:
-                lines.append("\t"*indent_level + "<" + node['type'] + ' value=' + quoteEscape(node["value"]) + '>')
-        else:
-            if "line_no" in node:
-                if "end_col" in node:
-                    lines.append("\t"*indent_level + "<" + node['type'] + ' lineno="' + str(node['line_no']) + '" col="' + str(node['col']) + '" end_line_no="' + str(node['end_line_no']) + '" end_col="' + str(node['end_col']) + '">')
-                else:
-                    lines.append("\t"*indent_level + "<" + node['type'] + ' lineno="' + str(node['line_no']) + '" col="' + str(node['col']) + '">')
-            else:
-                lines.append("\t"*indent_level + "<" + node['type'] + ">")
-        for child in node["children"]:
-            write(int(child), indent_level + 1)
-        lines.append("\t"*indent_level + "</" + node["type"] + ">")
+        line = "\t" * indent_level + "<{}".format(node['type'])
+        for key in ['value', 'lineno', 'col', 'end_line_no', 'end_col']:
+            if key in node:
+                line += (' {}={}'.format(key, quoteattr(str(node[key]))))
+        line += ">"
+        lines.append(line)
+        if "children" in node:
+            for child in node["children"]:
+                convert_node(int(child), indent_level + 1)
+        lines.append("\t" * indent_level + "</" + node["type"] + ">")
+        return lines
 
-def quoteEscape(x):
-    return quoteattr(x);
-
-def getFirstNonChildInd(tree, index):
-    def getHelper(index):
-        if len(tree[index]['children']) == 0:
-            return index
-        return max([getHelper(i) for i in tree[index]['children']])
-    return getHelper(index) + 1
-def getLast(text, i):
-    tree[i]["end_line_no"] = len(text.split('\n'))
-    tree[i]["end_col"] = len(text.split('\n')[-1])
+    return "\n".join(convert_node(0))
 
 
 if __name__ == "__main__":
-    try:
-        text = open(sys.argv[1], "r+").read()
+    parser = argparse.ArgumentParser(description='Parse python3 file')
+    parser.add_argument('filename', type=str, help='Filename')
+    parser.add_argument('-f', '--format', choices=["xml", "json"], help="Print format", default="xml")
 
-        json_file = parse_file(sys.argv[1])
-        tree = jsontree.JSONTreeDecoder().decode(json_file)
+    args = parser.parse_args()
+    json_tree = parse_file(args.filename)
 
-        lines = []
-        write(0)
-
-        print('\n'.join(lines))
-
-    except (UnicodeEncodeError, UnicodeDecodeError):
-        pass
+    if args.format == "json":
+        print(json.dumps(json_tree, separators=(',', ':'), ensure_ascii=False))
+    else:
+        xml = json2xml(json_tree)
+        print(xml)

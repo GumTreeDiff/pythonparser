@@ -173,26 +173,16 @@ def json2xml(tree):
     return "\n".join(convert_node(0))
 
 
-def parse(filename):
-    try:
-        json_tree = parse_file(filename)
-        return json2xml(json_tree)
-
-    except (UnicodeEncodeError, UnicodeDecodeError):
-        pass
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Parse python3 file')
     parser.add_argument('filename', type=str, help='Filename')
-    parser.add_argument('--noprintxml', action="store_true", help='Show')
-    parser.add_argument('--printjson', action="store_true", help='Show json')
+    parser.add_argument('-f', '--format', choices=["xml", "json"], help="Print format", default="xml")
 
     args = parser.parse_args()
     json_tree = parse_file(args.filename)
-    xml = json2xml(json_tree)
 
-    if not args.noprintxml:
+    if args.format == "json":
+        print(json.dumps(json_tree, separators=(',', ':'), ensure_ascii=False))
+    else:
+        xml = json2xml(json_tree)
         print(xml)
-    if args.printjson:
-        print(json_tree)
