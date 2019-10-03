@@ -23,7 +23,6 @@ def read_file_to_string(filename):
 
 
 def parse_file(filename):
-    global c, d
     tree = asttokens.ASTTokens(read_file_to_string(filename), parse=True).tree
 
     json_tree = []
@@ -33,15 +32,11 @@ def parse_file(filename):
         json_tree.append(json_node)
         json_node['type'] = node_type
         json_node['value'] = identifier
-        try:
-            json_node['line_no'] = str(node.lineno)
-            json_node['col'] = str(node.col_offset)
-        except:
-            try:
-                json_node['line_no'] = str(node.first_token.start[0])
-                json_node['col'] = str(node.first_token.start[1])
-            except:
-                pass
+        
+        json_pos_and_length = extract_pos_and_length(node, node)
+        json_node['pos'] = str(json_pos_and_length[0])
+        json_node['length'] = str(json_pos_and_length[1])
+
         return pos
 
     def traverse_list(l, node_type = 'list', node = None):
@@ -49,19 +44,20 @@ def parse_file(filename):
         json_node = {}
         json_tree.append(json_node)
         json_node['type'] = node_type
-        try:
-                json_node['line_no'] = str(node.lineno)
-                json_node['col'] = str(node.col_offset)
-        except:
-            try:
-                json_node['line_no'] = str(node.first_token.start[0])
-                json_node['col'] = str(node.first_token.start[1])
-            except: pass
+        
+        if (len(l) > 0):
+            json_pos_and_length = extract_pos_and_length(l[0], l[-1])
+        else:
+            json_pos_and_length = extract_pos_and_length(node, node)
+        json_node['pos'] = str(json_pos_and_length[0])
+        json_node['length'] = str(json_pos_and_length[1])
+
         children = []
         for item in l:
             children.append(traverse(item))
         if (len(children) != 0):
             json_node['children'] = children
+
         return pos
 
     def traverse(node):
@@ -69,14 +65,11 @@ def parse_file(filename):
         json_node = {}
         json_tree.append(json_node)
         json_node['type'] = type(node).__name__
-        try:
-                json_node['line_no'] = str(node.lineno)
-                json_node['col'] = str(node.col_offset)
-        except:
-            try:
-                json_node['line_no'] = str(node.first_token.start[0])
-                json_node['col'] = str(node.first_token.start[1])
-            except: pass
+        
+        json_pos_and_length = extract_pos_and_length(node, node)
+        json_node['pos'] = str(json_pos_and_length[0])
+        json_node['length'] = str(json_pos_and_length[1])
+        
         children = []
         if isinstance(node, ast.Name):
             json_node['value'] = node.id
@@ -162,63 +155,35 @@ def parse_file(filename):
 
         if (len(children) != 0):
             json_node['children'] = children
+
         return pos
+
+    def extract_pos_and_length(node, other_node):
+        try:
+            return [node.startpos, other_node.endpos - node.startpos]
+        except:
+            try:
+                return [node.first_token.startpos, other_node.last_token.endpos - node.first_token.startpos]
+            except:
+                pass
+        return [-1, -1]
 
     traverse(tree)
     return json.dumps(json_tree, separators=(',', ':'), ensure_ascii=False)
 
 def write(i, indent_level = 0):
-        global lines
-        node = tree[i]
-        if "value" in node:
-            if "line_no" in node:
-                if "end_col" in node:
-                    lines.append("\t"*indent_level + "<" + node['type'] + ' value=' + quoteEscape(node["value"]) + ' lineno="' + str(node['line_no']) + '" col="' + str(node['col']) + '" end_line_no="' + str(node['end_line_no']) + '" end_col="' + str(node['end_col']) + '">')
-                else:
-                    lines.append("\t"*indent_level + "<" + node['type'] + ' value=' + quoteEscape(node["value"]) + ' lineno="' + str(node['line_no']) + '" col="' + str(node['col']) + '">')
-            else:
-                lines.append("\t"*indent_level + "<" + node['type'] + ' value=' + quoteEscape(node["value"]) + '>')
-        else:
-            if "line_no" in node:
-                if "end_col" in node:
-                    lines.append("\t"*indent_level + "<" + node['type'] + ' lineno="' + str(node['line_no']) + '" col="' + str(node['col']) + '" end_line_no="' + str(node['end_line_no']) + '" end_col="' + str(node['end_col']) + '">')
-                else:
-                    lines.append("\t"*indent_level + "<" + node['type'] + ' lineno="' + str(node['line_no']) + '" col="' + str(node['col']) + '">')
-            else:
-                lines.append("\t"*indent_level + "<" + node['type'] + ">")
-        for child in node["children"]:
-            write(int(child), indent_level + 1)
-        lines.append("\t"*indent_level + "</" + node["type"] + ">")
+    global lines
+    indent_string = '  '
+    indent = indent_string * indent_level
+    node = tree[i]
+    label_attr = ' label=' + quoteEscape(node["value"])  if node['value'] else ''
+    lines.append(indent + '<tree type="' + node['type'] + '"' + label_attr + ' pos="' + str(node['pos']) + '" length="' + str(node['length']) + '">')
+    for child in node["children"]:
+        write(int(child), indent_level + 1)
+    lines.append(indent + '</tree>')
 
 def quoteEscape(x):
     return quoteattr(x);
-
-def getFirstNonChildInd(tree, index):
-    def getHelper(index):
-        if len(tree[index]['children']) == 0:
-            return index
-        return max([getHelper(i) for i in tree[index]['children']])
-    return getHelper(index) + 1
-def getLast(text, i):
-    tree[i]["end_line_no"] = len(text.split('\n'))
-    tree[i]["end_col"] = len(text.split('\n')[-1])
-def addEnd(tree, i, text):
-    try:
-        first_non_child = getFirstNonChildInd(tree, i)
-        first_non_child_start = tree[first_non_child]["line_no"]
-        first_non_child_col = tree[first_non_child]["col"]
-        tree[i]["end_line_no"] = int(first_non_child_start)
-        tree[i]["end_col"] = int(first_non_child_col)
-        if first_non_child_col == "-1":
-            tree[first_non_child]["col"] = "0"
-            tree[i]["end_col"] = "0"
-    except:
-        getLast(text, i)
-    for child in tree[i]['children']:
-        addEnd(tree, child, text)
-
-
-
 
 if __name__ == "__main__":
     try:
@@ -228,10 +193,12 @@ if __name__ == "__main__":
         tree = jsontree.JSONTreeDecoder().decode(json_file)
 
         x = tree[0]
-
+        x['length'] = len(text)
         lines = []
-        addEnd(tree, 0, text)
+        lines.append("<root>")
+        lines.append("<context></context>")
         write(0)
+        lines.append("</root>")
 
         print('\n'.join(lines))
 
