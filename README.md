@@ -25,7 +25,7 @@ Features of Python 3.8 that should affect the parser's code  are:
     `python pythonparser_2 path_to_src_file.py`
   
 - python3:  
-    `python3 pythonparser_2 path_to_src_file.py`
+    `python3 pythonparser_3 path_to_src_file.py`
 ## run tests for pythonparser_3:  
 `python3 -m pytest`
 
