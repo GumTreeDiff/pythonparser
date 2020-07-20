@@ -1,8 +1,8 @@
 # pythonparser
 [![elena-lyulina](https://circleci.com/gh/elena-lyulina/pythonparser/tree/inverse_parser.svg?style=shield)](https://app.circleci.com/pipelines/github/elena-lyulina/pythonparser?branch=inverse_parser)
 
-This repo contains parsers from **python code** to **xml/json** and vice versa.
-There are parsers for **python2** (see [pythonparser](src/main/python/pythonparser-2.py), source code from [this repo](https://github.com/GumTreeDiff/pythonparser)) and **python3** (see [pythonparser3](src/main/python/pythonparser-3.py), source code from [this repo](https://github.com/Varal7/pythonparser) and [this project](https://eth-sri.github.io/py150)). 
+This repository contains parsers from **python code** to **xml/json** and vice versa.
+There are parsers for **python2** (see [pythonparser](src/main/python/pythonparser-2.py), source code from [this] repository(https://github.com/GumTreeDiff/pythonparser)) and **python3** (see [pythonparser3](src/main/python/pythonparser-3.py), source code from [this] repository (https://github.com/Varal7/pythonparser) and [this] project(https://eth-sri.github.io/py150)). 
 
 
 ##### TODO: 
