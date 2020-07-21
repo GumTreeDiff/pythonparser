@@ -1,16 +1,21 @@
+#!/usr/bin/env python3
+
 # Copyright (c) Raychev, V., Bielik, P., and Vechev, M. (see https://eth-sri.github.io/py150)
 # Copyright (c) Victor Quach (see https://github.com/Varal7/pythonparser)
-# !/usr/bin/env python3
 
-import sys
+
 import json as json
 import ast
 import asttokens
 from xml.sax.saxutils import quoteattr
 import argparse
+from typing import List, Dict, Union
+
+ListOfDicts = List[Dict]
+ListOfAstNodes = List[ast.AST]
 
 
-def read_file_to_string(filename):
+def read_file_to_string(filename: str) -> str:
     """
     :param filename: path to file
     :return: string with file content
@@ -21,23 +26,22 @@ def read_file_to_string(filename):
     return s
 
 
-def parse_file(filename):
+def parse_file(filename: str) -> ListOfDicts:
     """
     :param filename: file with python3 code to be parsed
-    :type filename: str
-    :return: list of dicts (tree in json format)
+    :return: tree in json format
     """
     tree = asttokens.ASTTokens(read_file_to_string(filename), parse=True).tree
 
     json_tree = []
 
-    def localize(node, json_node):
+    def localize(node: ast.AST, json_node: Dict) -> None:
         json_node['lineno'] = str(node.first_token.start[0])
         json_node['col'] = str(node.first_token.start[1])
-        json_node['end_line_no'] = str(node.last_token.end[0])
+        json_node['end_lineno'] = str(node.last_token.end[0])
         json_node['end_col'] = str(node.last_token.end[1])
 
-    def gen_identifier(identifier, node_type='identifier', node=None):
+    def gen_identifier(identifier: str, node_type: str = 'identifier', node: ast.AST = None) -> int:
         pos = len(json_tree)
         json_node = {}
         json_tree.append(json_node)
@@ -46,7 +50,7 @@ def parse_file(filename):
         localize(node, json_node)
         return pos
 
-    def traverse_list(l, node_type='list', node=None):
+    def traverse_list(l: ListOfAstNodes, node_type: str = 'list', node: ast.AST = None) -> int:
         pos = len(json_tree)
         json_node = {}
         json_tree.append(json_node)
@@ -59,7 +63,7 @@ def parse_file(filename):
             json_node['children'] = children
         return pos
 
-    def traverse(node):
+    def traverse(node: ast.AST) -> Union[ListOfDicts, int]:
         pos = len(json_tree)
         json_node = {}
         json_tree.append(json_node)
@@ -154,7 +158,7 @@ def parse_file(filename):
                    isinstance(child, ast.unaryop) or\
                    isinstance(child, ast.cmpop):
                     # Directly include expr_context, and operators into the type instead of creating a child.
-                    json_node['type'] = json_node['type'] + type(child).__name__
+                    json_node['type'] = json_node['type'] + '_' + type(child).__name__
                 else:
                     children.append(traverse(child))
 
@@ -169,7 +173,7 @@ def parse_file(filename):
     return json_tree
 
 
-def json2xml(tree):
+def json2xml(tree: ListOfDicts) -> str:
     """
     :param tree: tree in json format produced by parser
     :type tree: list of dicts
@@ -177,32 +181,32 @@ def json2xml(tree):
     """
     lines = []
 
-    def convert_node(i, indent_level=0):
+    def convert_node(i: int, indent_level: int = 0) -> List[str]:
         node = tree[i]
-        line = "\t" * indent_level + "<{}".format(node['type'])
-        for key in ['value', 'lineno', 'col', 'end_line_no', 'end_col']:
+        line = '\t' * indent_level + '<{}'.format(node['type'])
+        for key in ['value', 'lineno', 'col', 'end_lineno', 'end_col']:
             if key in node:
                 line += (' {}={}'.format(key, quoteattr(str(node[key]))))
-        line += ">"
+        line += '>'
         lines.append(line)
-        if "children" in node:
-            for child in node["children"]:
+        if 'children' in node:
+            for child in node['children']:
                 convert_node(int(child), indent_level + 1)
-        lines.append("\t" * indent_level + "</" + node["type"] + ">")
+        lines.append('\t' * indent_level + '</' + node['type'] + '>')
         return lines
 
-    return "\n".join(convert_node(0))
+    return '\n'.join(convert_node(0))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Parse python3 file')
     parser.add_argument('filename', type=str, help='Filename')
-    parser.add_argument('-f', '--format', choices=["xml", "json"], help="Print format", default="xml")
+    parser.add_argument('-f', '--format', choices=['xml', 'json'], help='Print format', default='xml')
 
     args = parser.parse_args()
     json_tree = parse_file(args.filename)
 
-    if args.format == "json":
+    if args.format == 'json':
         print(json.dumps(json_tree, separators=(',', ':'), ensure_ascii=False))
     else:
         xml = json2xml(json_tree)

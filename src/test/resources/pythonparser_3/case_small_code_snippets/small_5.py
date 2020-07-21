@@ -1,3 +1,5 @@
+# Copyright (c) www.geeksforgeeks.org
+
 # Python program to mail merger
 # Names are in the file names.txt
 # Body of the mail is in body.txt

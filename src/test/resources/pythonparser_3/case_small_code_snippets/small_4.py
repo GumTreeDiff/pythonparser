@@ -1,3 +1,5 @@
+# Copyright (c) www.geeksforgeeks.org
+
 # Program to multiply two matrices using nested loops
 
 # 3x3 matrix

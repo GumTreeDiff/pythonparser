@@ -1,3 +1,5 @@
+# Copyright (c) Aniskov N.
+
 from datetime import date
 
 user = 'Nick'

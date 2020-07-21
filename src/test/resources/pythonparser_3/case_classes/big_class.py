@@ -1,3 +1,5 @@
+# Copyright Aniskov N.
+
 import ast
 import operator
 

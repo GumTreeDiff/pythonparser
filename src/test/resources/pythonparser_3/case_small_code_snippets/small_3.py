@@ -1,3 +1,6 @@
+# Copyright (c) www.geeksforgeeks.org
+
+
 def jpeg_res(filename):
     """"This function prints the resolution of the jpeg image file passed into it"""
 
