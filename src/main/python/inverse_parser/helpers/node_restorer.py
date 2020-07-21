@@ -1,5 +1,5 @@
 import ast
-from src.main.python.sundry.merged_types_restorer import _py_node_type_name_to_ast_type
+from src.main.python.inverse_parser.inverse_parser_3 import py_node_type_name_to_ast_type_
 
 
 class NodeRestorer:
@@ -33,7 +33,7 @@ class NodeRestorer:
         name = self.xml_node.attrib['value']
         as_name = self.xml_node.find('identifier').attrib['value']
         if not hasattr(self.py_node, 'names'):
-            name_type = _py_node_type_name_to_ast_type['alias']
+            name_type = py_node_type_name_to_ast_type_['alias']
             self.py_node.names = [name_type()]
         self.py_node.names[-1].name = name
         self.py_node.names[-1].asname = as_name
