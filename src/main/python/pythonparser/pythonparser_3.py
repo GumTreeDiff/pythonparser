@@ -4,15 +4,15 @@
 # Copyright (c) Victor Quach (see https://github.com/Varal7/pythonparser)
 
 
-import json as json
-import ast
-import asttokens
-from xml.sax.saxutils import quoteattr
 import argparse
-from typing import List, Dict, Union
+import ast
+import json as json
+from typing import Dict, List, Union
+from xml.sax.saxutils import quoteattr
 
-ListOfDicts = List[Dict]
-ListOfAstNodes = List[ast.AST]
+import asttokens
+
+JsonNodeType = Dict[str, Union[str, List[int]]]
 
 
 def read_file_to_string(filename: str) -> str:
@@ -20,13 +20,12 @@ def read_file_to_string(filename: str) -> str:
     :param filename: path to file
     :return: string with file content
     """
-    f = open(filename, 'rt')
-    s = f.read()
-    f.close()
-    return s
+    with open(filename, 'rt') as f:
+        content = f.read()
+    return content
 
 
-def parse_file(filename: str) -> ListOfDicts:
+def parse_file(filename: str) -> List[JsonNodeType]:
     """
     :param filename: file with python3 code to be parsed
     :return: tree in json format
@@ -35,7 +34,7 @@ def parse_file(filename: str) -> ListOfDicts:
 
     json_tree = []
 
-    def localize(node: ast.AST, json_node: Dict) -> None:
+    def localize(node: ast.AST, json_node: JsonNodeType) -> None:
         json_node['lineno'] = str(node.first_token.start[0])
         json_node['col'] = str(node.first_token.start[1])
         json_node['end_lineno'] = str(node.last_token.end[0])
@@ -50,20 +49,20 @@ def parse_file(filename: str) -> ListOfDicts:
         localize(node, json_node)
         return pos
 
-    def traverse_list(l: ListOfAstNodes, node_type: str = 'list', node: ast.AST = None) -> int:
+    def traverse_list(py_ast_nodes: List[ast.AST], node_type: str = 'list', node: ast.AST = None) -> int:
         pos = len(json_tree)
         json_node = {}
         json_tree.append(json_node)
         json_node['type'] = node_type
         localize(node, json_node)
         children = []
-        for item in l:
+        for item in py_ast_nodes:
             children.append(traverse(item))
         if len(children) != 0:
             json_node['children'] = children
         return pos
 
-    def traverse(node: ast.AST) -> Union[ListOfDicts, int]:
+    def traverse(node: ast.AST) -> Union[JsonNodeType, int]:
         pos = len(json_tree)
         json_node = {}
         json_tree.append(json_node)
@@ -173,7 +172,7 @@ def parse_file(filename: str) -> ListOfDicts:
     return json_tree
 
 
-def json2xml(tree: ListOfDicts) -> str:
+def json2xml(tree: List[JsonNodeType]) -> str:
     """
     :param tree: tree in json format produced by parser
     :type tree: list of dicts
@@ -204,10 +203,10 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--format', choices=['xml', 'json'], help='Print format', default='xml')
 
     args = parser.parse_args()
-    json_tree = parse_file(args.filename)
+    parsed_json_tree = parse_file(args.filename)
 
     if args.format == 'json':
-        print(json.dumps(json_tree, separators=(',', ':'), ensure_ascii=False))
+        print(json.dumps(parsed_json_tree, separators=(',', ':'), ensure_ascii=False))
     else:
-        xml = json2xml(json_tree)
+        xml = json2xml(parsed_json_tree)
         print(xml)
