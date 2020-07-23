@@ -1,1 +1,8 @@
-RESOURCE_FOLDER_PATH = 'src/test/resources'
+# Copyright (c) Aniskov N.
+
+import os
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[3]
+TEST_RESOURCES_PATH = os.path.join(ROOT_DIR, 'src/test/resources')
+

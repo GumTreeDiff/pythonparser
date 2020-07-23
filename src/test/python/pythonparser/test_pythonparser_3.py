@@ -1,18 +1,18 @@
 # Copyright (c) Aniskov N.
 
 import os
-from xml.etree import ElementTree as ET
 from typing import *
+from xml.etree import ElementTree as ET
 
 import pytest
 
 from src.main.python.pythonparser.pythonparser_3 import *
-from src.main.util.const import RESOURCE_FOLDER_PATH
+from src.main.util.const import TEST_RESOURCES_PATH
 
 
 class TestPythonParser3:
 
-    _input_dir = os.path.join(RESOURCE_FOLDER_PATH, 'pythonparser/pythonparser_3')
+    _input_dir = os.path.join(TEST_RESOURCES_PATH, 'pythonparser/pythonparser_3')
 
     test_cases_dirs = \
         [
@@ -31,22 +31,21 @@ class TestPythonParser3:
                          marks=pytest.mark.skip(reason='python 3.8 not supported yet'))
         ]
 
-    # Helper functions
+    # Helper functions:
 
     @staticmethod
-    def get_xml_tree(path_to_py_file: str) -> ET.Element:
+    def __get_xml_tree(path_to_py_file: str) -> ET.Element:
         parsed_json = parse_file(path_to_py_file)
         xml_str = json2xml(parsed_json)
         root = ET.fromstring(xml_str)
         return root
 
     @staticmethod
-    def count_token_occurrence(tree: ET.Element, tokens: Iterable[str]) -> Dict[str, int]:
-        result = {token: len(tree.findall('.//' + token))
-                  for token in tokens}
-        return result
+    def __get_count_token_occurrence(tree: ET.Element, tokens: Iterable[str]) -> Dict[str, int]:
+        return {token: len(tree.findall('.//' + token))
+                for token in tokens}
 
-    # Tests
+    # Tests:
 
     @pytest.mark.parametrize(
         'cases_dirs',
@@ -80,7 +79,7 @@ class TestPythonParser3:
         """
         for entry in os.scandir(test_input_dirs):
             # print(f'Current entry is: {entry.path}') TODO: remove or add logger instead
-            with pytest.raises(SyntaxError) as exc_info:
+            with pytest.raises(SyntaxError):
                 _ = parse_file(entry.path)
 
     @pytest.mark.parametrize(
@@ -96,7 +95,7 @@ class TestPythonParser3:
         """
         for entry in os.scandir(test_input_dirs):
             # print(f'Current entry is: {entry.path}') TODO: remove or add logger instead
-            with pytest.raises(SyntaxError) as exc_info:
+            with pytest.raises(SyntaxError):
                 _ = parse_file(entry.path)
 
     @staticmethod
@@ -113,7 +112,7 @@ class TestPythonParser3:
     def test_correct_token_params(self, token_params_sample) -> None:
         input_file_paths = os.path.join(self._input_dir, 'case_small_code_snippets/small_3.py')
         (expected, xml_element) = token_params_sample
-        root = self.get_xml_tree(input_file_paths)
+        root = self.__get_xml_tree(input_file_paths)
         match = root.find('.//' + xml_element)
         assert match is not None
         match_params = match.attrib
@@ -138,8 +137,8 @@ class TestPythonParser3:
         are accounted for by parser
         """
         (expected, input_file_path) = tokens_to_cnt
-        root = self.get_xml_tree(input_file_path)
-        result = self.count_token_occurrence(root, expected.keys())
+        root = self.__get_xml_tree(input_file_path)
+        result = self.__get_count_token_occurrence(root, expected.keys())
         assert result == expected
 
     @staticmethod
@@ -160,8 +159,8 @@ class TestPythonParser3:
         into the type instead of creating a child
         """
         (expected, input_file_path) = merged_tokens_to_cnt
-        root = self.get_xml_tree(input_file_path)
-        result = self.count_token_occurrence(root, expected.keys())
+        root = self.__get_xml_tree(input_file_path)
+        result = self.__get_count_token_occurrence(root, expected.keys())
         assert result == expected
 
 
