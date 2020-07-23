@@ -1,5 +1,7 @@
-# Copyright (c) GumTreeDiff (see https://github.com/GumTreeDiff/pythonparser)
 #!/usr/bin/env python2.7
+
+# Copyright (c) GumTreeDiff (see https://github.com/GumTreeDiff/pythonparser)
+
 
 import sys
 import json as json

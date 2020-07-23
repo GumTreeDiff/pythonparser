@@ -1,7 +1,6 @@
 # Copyright (c) Raychev, V., Bielik, P., and Vechev, M. (see https://eth-sri.github.io/py150)
 # Copyright (c) Victor Quach (see https://github.com/Varal7/pythonparser)
-
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 
 import sys
 import json as json
@@ -9,6 +8,7 @@ import ast
 import asttokens
 from xml.sax.saxutils import quoteattr
 import argparse
+
 
 def read_file_to_string(filename):
     f = open(filename, 'rt')
@@ -28,7 +28,7 @@ def parse_file(filename):
         json_node['end_line_no'] = str(node.last_token.end[0])
         json_node['end_col'] = str(node.last_token.end[1])
 
-    def gen_identifier(identifier, node_type = 'identifier', node=None):
+    def gen_identifier(identifier, node_type='identifier', node=None):
         pos = len(json_tree)
         json_node = {}
         json_tree.append(json_node)
@@ -37,7 +37,7 @@ def parse_file(filename):
         localize(node, json_node)
         return pos
 
-    def traverse_list(l, node_type = 'list', node = None):
+    def traverse_list(l, node_type='list', node=None):
         pos = len(json_tree)
         json_node = {}
         json_tree.append(json_node)
@@ -46,7 +46,7 @@ def parse_file(filename):
         children = []
         for item in l:
             children.append(traverse(item))
-        if (len(children) != 0):
+        if len(children) != 0:
             json_node['children'] = children
         return pos
 
@@ -64,31 +64,30 @@ def parse_file(filename):
         elif isinstance(node, ast.Constant):
             json_node['value'] = node.value
         elif isinstance(node, ast.Num):
-            json_node['value'] = (node.n)
+            json_node['value'] = node.n
         elif isinstance(node, ast.Str):
             json_node['value'] = node.s
         elif isinstance(node, ast.alias):
-            json_node['value'] = (node.name)
+            json_node['value'] = node.name
             if node.asname:
-                children.append(gen_identifier(node.asname, node = node))
+                children.append(gen_identifier(node.asname, node=node))
         elif isinstance(node, ast.FunctionDef):
-            json_node['value'] = (node.name)
+            json_node['value'] = node.name
         elif isinstance(node, ast.ExceptHandler):
             if node.name:
                 json_node['value'] = node.name
         elif isinstance(node, ast.ClassDef):
-            json_node['value'] = (node.name)
+            json_node['value'] = node.name
         elif isinstance(node, ast.ImportFrom):
             if node.module:
-                json_node['value'] = (node.module)
+                json_node['value'] = node.module
         elif isinstance(node, ast.Global):
             for n in node.names:
-                children.append(gen_identifier(n, node = node))
+                children.append(gen_identifier(n, node=node))
         elif isinstance(node, ast.keyword):
-            json_node['value'] = (node.arg)
+            json_node['value'] = node.arg
         elif isinstance(node, ast.arg):
-            json_node['value'] = (node.arg)
-
+            json_node['value'] = node.arg
 
         # Process children.
         if isinstance(node, ast.For):
@@ -140,7 +139,11 @@ def parse_file(filename):
         else:
             # Default handling: iterate over children.
             for child in ast.iter_child_nodes(node):
-                if isinstance(child, ast.expr_context) or isinstance(child, ast.operator) or isinstance(child, ast.boolop) or isinstance(child, ast.unaryop) or isinstance(child, ast.cmpop):
+                if isinstance(child, ast.expr_context) or\
+                   isinstance(child, ast.operator) or\
+                   isinstance(child, ast.boolop) or\
+                   isinstance(child, ast.unaryop) or\
+                   isinstance(child, ast.cmpop):
                     # Directly include expr_context, and operators into the type instead of creating a child.
                     json_node['type'] = json_node['type'] + type(child).__name__
                 else:
@@ -149,7 +152,7 @@ def parse_file(filename):
         if isinstance(node, ast.Attribute):
             children.append(gen_identifier(node.attr, 'attr', node))
 
-        if (len(children) != 0):
+        if len(children) != 0:
             json_node['children'] = children
         return pos
 
@@ -159,6 +162,7 @@ def parse_file(filename):
 
 def json2xml(tree):
     lines = []
+
     def convert_node(i, indent_level=0):
         node = tree[i]
         line = "\t" * indent_level + "<{}".format(node['type'])
