@@ -1,3 +1,5 @@
+# Copyright (c) Aniskov N.
+
 import ast
 
 
@@ -5,7 +7,7 @@ _py_node_type_name_to_ast_type = \
     dict([(name, cls) for name, cls in ast.__dict__.items() if isinstance(cls, type)])
 
 
-class MergedTypesRestorer:
+class _MergedTypesRestorer:
     """
     Class provides functionality to restore context and operations,
     encoded in XML nodes tags
@@ -46,5 +48,3 @@ class MergedTypesRestorer:
 
         else:
             raise RuntimeError(f'Failed to restore context or operators')
-
-
