@@ -6,19 +6,22 @@ import xml.etree.ElementTree as ET
 from astmonkey import visitors
 
 from src.main.python.inverse_parser._node_restorer import _NodeRestorer
-from src.main.python.pythonparser.pythonparser_3 import parse_file, json2xml
 
 
 class InverseParser:
     """
     Class containing converts AST in XML format to Python AST object
     """
-    def __init__(self, filename: str):
+    def __init__(self, filename_or_str_repr: str, from_string: bool = False):
         """
-        :param filename: path to file containing AST in XML format
+        :param filename_or_str_repr: path to file containing AST in XML format
         """
-        self.filename_ = filename
-        self.xml_ast_ = None
+        if not from_string:
+            self.filename_ = filename_or_str_repr
+            self.xml_ast_ = None
+        else:
+            self.filename_ = None
+            self.xml_ast_ = ET.fromstring(filename_or_str_repr)
         self.py_ast_ = None
 
     def get_source(self) -> str:
