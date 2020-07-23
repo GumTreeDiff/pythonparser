@@ -31,7 +31,7 @@ class TestPythonParser3:
                          marks=pytest.mark.skip(reason='python 3.8 not supported yet'))
         ]
 
-    # Helper functions
+    # Helper functions:
 
     @staticmethod
     def __get_xml_tree(path_to_py_file: str) -> ET.Element:
@@ -45,7 +45,7 @@ class TestPythonParser3:
         return {token: len(tree.findall('.//' + token))
                 for token in tokens}
 
-    # Tests
+    # Tests:
 
     @pytest.mark.parametrize(
         'cases_dirs',
