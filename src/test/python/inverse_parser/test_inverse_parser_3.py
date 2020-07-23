@@ -5,6 +5,7 @@ import os
 import pytest
 
 from src.main.python.inverse_parser.inverse_parser_3 import *
+from src.main.python.pythonparser.pythonparser_3 import json2xml, parse_file
 from src.main.util.const import TEST_RESOURCES_PATH
 
 
