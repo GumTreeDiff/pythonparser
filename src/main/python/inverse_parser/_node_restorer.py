@@ -3,6 +3,7 @@
 import ast
 import xml.etree.ElementTree as ET
 from typing import *
+import warnings
 
 from src.main.python.inverse_parser._merged_types_restorer import _MergedTypesRestorer
 
@@ -23,72 +24,14 @@ class _NodeRestorer:
         if not py_node_type == ast.Module:  # ast.Module doesn't need to be localized
             _NodeRestorer.localize_node(xml_node, py_node)
 
-        if py_node_type == ast.Name:
-            _NodeRestorer.restore_name(xml_node, py_node)
+        try:
+            restore_py_node = _NodeRestorer.py_node_type_to_restorer[py_node_type]
 
-        elif py_node_type == ast.NameConstant:
-            _NodeRestorer.restore_name_constant(xml_node, py_node)
+        except KeyError:
+            restore_py_node = _NodeRestorer.py_node_type_to_restorer['default']
+            warnings.warn(f'Restorer for {py_node_type} is unsupported yet. Default restorer will be called')
 
-        elif py_node_type == ast.Constant:
-            _NodeRestorer.restore_constant(xml_node, py_node)
-
-        elif py_node_type == ast.Num:
-            _NodeRestorer.restore_num(xml_node, py_node)
-
-        elif py_node_type == ast.Str:
-            _NodeRestorer.restore_str(xml_node, py_node)
-
-        elif py_node_type == ast.alias:
-            _NodeRestorer.restore_alias(xml_node, py_node)
-
-        elif py_node_type == ast.FunctionDef:
-            _NodeRestorer.restore_function_def(xml_node, py_node)
-
-        elif py_node_type == ast.ExceptHandler:
-            _NodeRestorer.restore_except_handler(xml_node, py_node)
-
-        elif py_node_type == ast.ClassDef:
-            _NodeRestorer.restore_class_def(xml_node, py_node)
-
-        elif py_node_type == ast.Import:
-            _NodeRestorer.restore_import(xml_node, py_node)
-
-        elif py_node_type == ast.ImportFrom:
-            _NodeRestorer.restore_import_from(xml_node, py_node)
-
-        elif py_node_type == ast.Global:
-            _NodeRestorer.restore_global(xml_node, py_node)
-
-        elif py_node_type == ast.keyword:
-            _NodeRestorer.restore_keyword(xml_node, py_node)
-
-        elif py_node_type == ast.arg:
-            _NodeRestorer.restore_arg(xml_node, py_node)
-
-        elif py_node_type == ast.Tuple:
-            _NodeRestorer.restore_tuple(xml_node, py_node)
-
-        elif py_node_type == ast.List:
-            _NodeRestorer.restore_list(xml_node, py_node)
-
-        elif py_node_type == ast.Assign:
-            _NodeRestorer.restore_assign(xml_node, py_node)
-
-        elif py_node_type == ast.BinOp:
-            _NodeRestorer.restore_bin_op(xml_node, py_node)
-
-        elif py_node_type == ast.BoolOp:
-            _NodeRestorer.restore_bool_op(xml_node, py_node)
-
-        elif py_node_type == ast.UnaryOp:
-            _NodeRestorer.restore_unary_op(xml_node, py_node)
-
-        elif py_node_type == ast.For:
-            _NodeRestorer.restore_for(xml_node, py_node)
-
-        else:
-            _NodeRestorer.restore_default(xml_node, py_node)
-
+        restore_py_node(xml_node, py_node)
         return py_node
 
     # Node restorers:
@@ -120,14 +63,6 @@ class _NodeRestorer:
         py_node.name = xml_node.attrib['value']
         xml_identifier = xml_node.find('identifier')
         py_node.asname = xml_identifier.attrib['value'] if xml_identifier is not None else None
-
-        # as_name = xml_identifier.attrib['value'] if xml_identifier else None
-        # if not hasattr(py_node, 'names'):
-        #     name_type = _py_node_type_name_to_ast_type['alias']
-        #     py_node.names = [name_type()]
-        # py_node.names[-1].name = name
-        # if as_name:
-        #     py_node.names[-1].asname = as_name
 
     @staticmethod
     def restore_function_def(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -210,10 +145,15 @@ class _NodeRestorer:
         py_node.operand = _NodeRestorer.restore(xml_operand)
 
     @staticmethod
-    def restore_default(xml_node: ET.Element, py_node: ast.AST) -> None:  # TODO: write better default handler
+    def restore_module(xml_node: ET.Element, py_node: ast.AST) -> None:
         xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
         if xml_node_children and ('body' in py_node._fields) and not hasattr(py_node, 'body'):
             py_node.body = [_NodeRestorer.restore(xml_node_child) for xml_node_child in xml_node_children]
+
+    # TODO: write better default handler
+    @staticmethod
+    def restore_default(xml_node: ET.Element, py_node: ast.AST) -> None:
+        _NodeRestorer.restore_module(xml_node, py_node) # the same as restore module at that point
 
     # Helper methods:
 
@@ -244,4 +184,33 @@ class _NodeRestorer:
             except ValueError:
                 pass
         return val
+
+
+_NodeRestorer.py_node_type_to_restorer = {
+    ast.Module: _NodeRestorer.restore_module,
+    ast.Name: _NodeRestorer.restore_name,
+    ast.Constant: _NodeRestorer.restore_constant,
+    ast.NameConstant: _NodeRestorer.restore_name_constant,
+    ast.Num: _NodeRestorer.restore_num,
+    ast.Str: _NodeRestorer.restore_str,
+    ast.alias: _NodeRestorer.restore_alias,
+    ast.FunctionDef: _NodeRestorer.restore_function_def,
+    ast.ExceptHandler: _NodeRestorer.restore_except_handler,
+    ast.ClassDef: _NodeRestorer.restore_class_def,
+    ast.Import: _NodeRestorer.restore_import,
+    ast.ImportFrom: _NodeRestorer.restore_import_from,
+    ast.Global: _NodeRestorer.restore_global,
+    ast.keyword: _NodeRestorer.restore_keyword,
+    ast.arg: _NodeRestorer.restore_arg,
+    ast.Tuple: _NodeRestorer.restore_tuple,
+    ast.List: _NodeRestorer.restore_list,
+    ast.Assign: _NodeRestorer.restore_assign,
+    ast.BinOp: _NodeRestorer.restore_bin_op,
+    ast.BoolOp: _NodeRestorer.restore_bool_op,
+    ast.UnaryOp: _NodeRestorer.restore_unary_op,
+    ast.For: _NodeRestorer.restore_for,
+    'default': _NodeRestorer.restore_default
+}
+
+
 
