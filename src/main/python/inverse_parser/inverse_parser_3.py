@@ -10,18 +10,25 @@ from src.main.python.inverse_parser._node_restorer import _NodeRestorer
 
 class InverseParser:
     """
-    Class containing converts AST in XML format to Python AST object
+    Class converts AST in XML format to Python AST object
     """
-    def __init__(self, filename_or_str_repr: str, from_string: bool = False):
+    def __init__(self, filename: str = None, xml_str: str = None):
         """
-        :param filename_or_str_repr: path to file containing AST in XML format
+        constructor requires one of the following parameters, but not both at the same time:
+        :param filename: path to file containing AST in XML format
+        :param xml_str: string, containing AST in XML format
         """
-        if not from_string:
-            self.filename_ = filename_or_str_repr
-            self.xml_ast_ = None
+        if not filename and not xml_str:
+            raise ValueError('Either "filename" or "xml_str" must not be None.')
+
+        if filename and xml_str:
+            raise ValueError('Only one of the "filename" and "xml_str" must be provided. Not both.')
+
+        if filename:
+            self.__init_xml_ast(filename)
         else:
-            self.filename_ = None
-            self.xml_ast_ = ET.fromstring(filename_or_str_repr)
+            self.xml_ast_ = ET.fromstring(xml_str)
+
         self.py_ast_ = None
 
     def get_source(self) -> str:
@@ -40,21 +47,13 @@ class InverseParser:
         if self.py_ast_:
             return self.py_ast_
 
-        if not self.xml_ast_:
-            self.xml_ast_ = self.__read_xml_ast()
-
         py_ast = _NodeRestorer.restore(self.xml_ast_)
         return py_ast
 
     def get_xml_ast(self) -> ET.Element:
-        if self.xml_ast_:
-            return self.xml_ast_
-        self.xml_ast_ = self.__read_xml_ast()
         return self.xml_ast_
 
-    def __read_xml_ast(self):
-        if not self.xml_ast_:
-            with open(self.filename_, 'rt') as f:
-                xml_str = f.read()
-                return ET.fromstring(xml_str)
-        return self.xml_ast_
+    def __init_xml_ast(self, filename: str) -> None:
+        with open(filename, 'rt') as f:
+            xml_str = f.read()
+            self.xml_ast_ = ET.fromstring(xml_str)
