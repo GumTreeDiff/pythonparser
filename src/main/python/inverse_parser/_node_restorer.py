@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 from typing import *
 
 from src.main.python.inverse_parser._merged_types_restorer import _MergedTypesRestorer
+from src.main.python.inverse_parser._value_setter import _ValueSetter
 
 
 class _NodeRestorer:
@@ -38,29 +39,30 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_constant(xml_node: ET.Element, py_node: ast.AST) -> None:
-        str_val_repr = xml_node.attrib['value']
-        py_node.value = _NodeRestorer.try_get_numeric_value(str_val_repr)
+        _ValueSetter.set_value(xml_node, py_node, py_node_attrib_name='value')
 
     @staticmethod
     def restore_ast_num(xml_node: ET.Element, py_node: ast.AST) -> None:
-        str_val_repr = xml_node.attrib['value']
-        py_node.n = _NodeRestorer.try_get_numeric_value(str_val_repr)
+        _ValueSetter.set_value(xml_node, py_node, py_node_attrib_name='n')
 
     @staticmethod
     def restore_ast_str(xml_node: ET.Element, py_node: ast.AST) -> None:
         py_node.s = xml_node.attrib['value']
 
     @staticmethod
-    def restore_ast_bytes(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+    def restore_ast_bytes(xml_node: ET.Element, py_node: ast.AST) -> None:  # Deprecated in Python 3.8 +
+        _ValueSetter.set_value(xml_node, py_node, py_node_attrib_name='s')
 
     @staticmethod
     def restore_ast_formatted_value(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        py_node.value = _NodeRestorer.restore(xml_node_children[0])
+        py_node.conversion = -1  # TODO: conversion=-1 is "no formatting". So it'll be default setting. It is possible to include conversion in XML if neccessary
 
     @staticmethod
     def restore_joined_str(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        py_node.values = _NodeRestorer.restore_many(xml_node_children)
 
     @staticmethod
     def restore_ast_list(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -74,7 +76,8 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_set(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        py_node.elts = _NodeRestorer.restore_many(xml_node_children)
 
     @staticmethod
     def restore_ast_dict(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -146,9 +149,12 @@ class _NodeRestorer:
     def restore_ast_call(xml_node: ET.Element, py_node: ast.AST) -> None:
         xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
 
-        args_kwargs_idx_delimiter = next(filter(
-            lambda enumerated_node: enumerated_node[1].tag == 'keyword',
-            enumerate(xml_node_children)))[0]
+        try:
+            args_kwargs_idx_delimiter = next(filter(
+                lambda enumerated_node: enumerated_node[1].tag == 'keyword',
+                enumerate(xml_node_children)))[0]
+        except StopIteration:
+            args_kwargs_idx_delimiter = len(xml_node_children)
 
         py_node.func = _NodeRestorer.restore(xml_node_children[0])
         py_node.args = _NodeRestorer.restore_many(xml_node_children[1:args_kwargs_idx_delimiter])
@@ -423,18 +429,6 @@ class _NodeRestorer:
         if with_tag:
             return xml_node.findall(with_tag)
         return xml_node.findall('*')
-
-    @staticmethod
-    def try_get_numeric_value(str_val_repr):  # TODO: if this is not enough, then it is necessary to insert type of Constant explicitly to XML
-        val = str_val_repr
-        try:
-            val = int(str_val_repr)
-        except ValueError:
-            try:
-                val = float(str_val_repr)
-            except ValueError:
-                pass
-        return val
 
 
 _NodeRestorer.py_node_type_to_restorer = {
