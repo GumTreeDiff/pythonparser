@@ -1,8 +1,8 @@
 # Copyright (c) Aniskov N.
-from typing import *
-from pydoc import locate
 import ast
 import xml.etree.ElementTree as ET
+from pydoc import locate
+
 from src.main.util.const import DEFAULT_ENCODING
 
 
