@@ -27,7 +27,7 @@ class _NodeRestorer:
             restore_py_node = _NodeRestorer.py_node_type_to_restorer[py_node_type]
 
         except KeyError:
-            raise NotImplementedError(f'Restorer for {py_node_type} is unsupported yet')
+            raise RuntimeError(f'Unknown node type: {py_node_type}.')
 
         restore_py_node(xml_node, py_node)
         return py_node
@@ -52,15 +52,15 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_bytes(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_formatted_value(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_joined_str(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_list(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -74,7 +74,7 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_set(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_dict(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -86,7 +86,7 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_ellipsis(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_name_constant(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -164,51 +164,51 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_if_exp(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_attribute(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     # - Subscripting:
 
     @staticmethod
     def restore_ast_subscript(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_index(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_slice(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_ext_slice(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     # - Comprehensions:
 
     @staticmethod
     def restore_ast_list_comp(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_set_comp(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_generator_exp(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_dict_comp(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_comprehension(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     # - Statements:
 
@@ -221,27 +221,27 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_ann_assign(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_aug_assign(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_raise(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_assert(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_delete(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_pass(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     # - Imports:
 
@@ -290,27 +290,27 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_while(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_break(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_continue(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_try(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     # @staticmethod
     # def restore_ast_try_finally(xml_node: ET.Element, py_node: ast.AST) -> None:
-    #     pass
+    #     raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
     #
     # @staticmethod
     # def restore_ast_try_except(xml_node: ET.Element, py_node: ast.AST) -> None:
-    #     pass
+    #     raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_except_handler(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -319,11 +319,11 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_with(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_withitem(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     # - Function and class definitions:
 
@@ -333,11 +333,11 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_lambda(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_arguments(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_arg(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -345,15 +345,15 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_return(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_yield(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_yield_from(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_global(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -362,7 +362,7 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_nonlocal(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_class_def(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -372,19 +372,19 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_async_function_def(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_await(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_async_for(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_async_with(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     # - Top level nodes:
 
@@ -396,11 +396,11 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_interactive(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     @staticmethod
     def restore_ast_expression(xml_node: ET.Element, py_node: ast.AST) -> None:
-        pass
+        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
     # No default handler.
 
