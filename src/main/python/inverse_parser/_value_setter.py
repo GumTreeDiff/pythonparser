@@ -15,12 +15,20 @@ class _ValueSetter:
         :param py_node:
         :param py_node_attrib_name:
         """
+        if 'value_type' not in xml_node.attrib:
+            raise RuntimeError(f'missing value_type attribute in {xml_node.tag} node')
+
         str_val_repr = xml_node.attrib['value']
-        value_type = locate(xml_node.attrib['value_type'])
-        if not value_type:
+        str_val_type_repr = xml_node.attrib['value_type']
+
+        value_type = locate(str_val_type_repr)
+
+        if str_val_type_repr == 'ellipsis':
+            value = ...
+        elif not value_type:
             raise RuntimeError(f'failed to locate Constant.value type: {xml_node.attrib["value_type"]}')
 
-        if value_type == bytes:
+        elif value_type == bytes:
             value = value_type(str_val_repr[2:len(str_val_repr) - 1].encode(DEFAULT_ENCODING))
         else:
             value = value_type(str_val_repr)
