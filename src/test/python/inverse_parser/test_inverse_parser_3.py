@@ -32,7 +32,7 @@ class TestInverseParser3:
     def test_generated_code_is_eq_to_original(self, cases_dirs: str) -> None:
         for entry in os.scandir(cases_dirs):
             xml_ast_str = json2xml(parse_file(entry.path))
-            inverse_parser = InverseParser(xml_ast_str, from_string=True)
+            inverse_parser = InverseParser(xml_ast_str)
 
             with open(entry.path) as in_f:
                 real_source = in_f.read()
