@@ -25,6 +25,8 @@ class _ValueSetter:
 
         if str_val_type_repr == 'ellipsis':
             value = ...
+        elif str_val_type_repr == 'NoneType':
+            value = None
         elif not value_type:
             raise RuntimeError(f'failed to locate Constant.value type: {xml_node.attrib["value_type"]}')
 
