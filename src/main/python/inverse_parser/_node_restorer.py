@@ -6,6 +6,7 @@ from typing import *
 
 from src.main.python.inverse_parser._merged_types_restorer import _MergedTypesRestorer
 from src.main.python.inverse_parser._value_setter import _ValueSetter
+from src.main.python.inverse_parser._xml_node_children_getter import _XmlNodeChildrenGetter
 
 
 class _NodeRestorer:
@@ -55,33 +56,36 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_formatted_value(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
-        py_node.value = _NodeRestorer.restore(xml_node_children[0])
-        py_node.conversion = -1  # TODO: conversion=-1 is "no formatting". So it'll be default setting. It is possible to include conversion in XML if neccessary
-
+        xml_node_child = _XmlNodeChildrenGetter.get_unique_child(xml_node)
+        py_node.value = _NodeRestorer.restore(xml_node_child)
+        py_node.conversion = -1
+        ''' 
+        Note: conversion=-1 is "no formatting". So it'll be default setting.
+        It is possible to include conversion in XML if neccessary
+        '''
     @staticmethod
     def restore_joined_str(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
         py_node.values = _NodeRestorer.restore_many(xml_node_children)
 
     @staticmethod
     def restore_ast_list(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
         py_node.elts = _NodeRestorer.restore_many(xml_node_children)
 
     @staticmethod
     def restore_ast_tuple(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
         py_node.elts = _NodeRestorer.restore_many(xml_node_children)
 
     @staticmethod
     def restore_ast_set(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
         py_node.elts = _NodeRestorer.restore_many(xml_node_children)
 
     @staticmethod
     def restore_ast_dict(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
         num_children = len(xml_node_children)
         assert len(xml_node_children) % 2 == 0, 'expected that (number of keys) == (number of values) in dict'
         py_node.keys = _NodeRestorer.restore_many(xml_node_children[:num_children // 2])
@@ -89,11 +93,11 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_ellipsis(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        _ValueSetter.set_value(xml_node, py_node, py_node_attrib_name='value')
 
     @staticmethod
     def restore_ast_name_constant(xml_node: ET.Element, py_node: ast.AST) -> None:
-        py_node.value = xml_node.attrib['value']
+        _ValueSetter.set_value(xml_node, py_node, py_node_attrib_name='value')
 
     # - Variables:
 
@@ -104,41 +108,41 @@ class _NodeRestorer:
     # Load, Store, Del are accounted for in set_ctx_and_ops method
     @staticmethod
     def restore_ast_starred(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
-        py_node.value = _NodeRestorer.restore(xml_node_children[0])
+        xml_node_child = _XmlNodeChildrenGetter.get_unique_child(xml_node)
+        py_node.value = _NodeRestorer.restore(xml_node_child)
 
     # - Expressions:
 
     @staticmethod
     def restore_ast_expr(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
-        py_node.value = _NodeRestorer.restore(xml_node_children[0])
+        xml_node_child = _XmlNodeChildrenGetter.get_unique_child(xml_node)
+        py_node.value = _NodeRestorer.restore(xml_node_child)
 
     @staticmethod
     def restore_ast_unary_op(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_operand = _NodeRestorer.get_xml_node_children(xml_node)[0]
+        xml_operand = _XmlNodeChildrenGetter.get_unique_child(xml_node)
         py_node.operand = _NodeRestorer.restore(xml_operand)
 
     # UAdd, USub, Not, Invert are accounted for in set_ctx_and_ops method
 
     @staticmethod
     def restore_ast_bin_op(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
-        py_node.left = _NodeRestorer.restore(xml_node_children[0])
-        py_node.right = _NodeRestorer.restore(xml_node_children[1])
+        left_xml_operand, right_xml_operand = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.left = _NodeRestorer.restore(left_xml_operand)
+        py_node.right = _NodeRestorer.restore(right_xml_operand)
 
     # Add, Sub, Mult, .. etc are accounted for in set_ctx_and_ops method
 
     @staticmethod
     def restore_ast_bool_op(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
         py_node.values = _NodeRestorer.restore_many(xml_node_children)
 
     # And, Or are accounted for in set_ctx_and_ops method
 
     @staticmethod
     def restore_ast_compare(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
 
         py_node.left = _NodeRestorer.restore(xml_node_children[0])
         py_node.comparators = _NodeRestorer.restore_many(xml_node_children[1:])
@@ -147,7 +151,7 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_call(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
 
         try:
             args_kwargs_idx_delimiter = next(filter(
@@ -162,104 +166,152 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_keyword(xml_node: ET.Element, py_node: ast.AST) -> None:
-        if xml_node.attrib['value'] != 'None':
-            py_node.arg = xml_node.attrib['value']
-        else:
-            py_node.arg = None
-        py_node.value = _NodeRestorer.restore(_NodeRestorer.get_xml_node_children(xml_node)[0])
+        _ValueSetter.set_value(xml_node, py_node, py_node_attrib_name='arg')
+        py_node.value = _NodeRestorer.restore(_XmlNodeChildrenGetter.get_unique_child(xml_node))
 
     @staticmethod
     def restore_ast_if_exp(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.test = _NodeRestorer.restore(xml_node_children[0])
+        py_node.body = _NodeRestorer.restore(xml_node_children[1])
+        py_node.orelse = _NodeRestorer.restore(xml_node_children[2])
 
     @staticmethod
     def restore_ast_attribute(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.value = _NodeRestorer.restore(xml_node_children[0])
+        py_node.attr = xml_node_children[1].attrib['value']
 
     # - Subscripting:
 
     @staticmethod
     def restore_ast_subscript(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.value = _NodeRestorer.restore(xml_node_children[0])
+        py_node.slice = _NodeRestorer.restore(xml_node_children[1])
 
     @staticmethod
     def restore_ast_index(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_child = _XmlNodeChildrenGetter.get_unique_child(xml_node)
+        py_node.value = _NodeRestorer.restore(xml_node_child)
 
     @staticmethod
     def restore_ast_slice(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.lower = _NodeRestorer.restore(xml_node_children[0])
+        py_node.upper = _NodeRestorer.restore(xml_node_children[1])
+        try:
+            py_node.step = _NodeRestorer.restore(xml_node_children[2])
+        except IndexError:
+            py_node.step = None
 
     @staticmethod
     def restore_ast_ext_slice(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.dims = _NodeRestorer.restore_many(xml_node_children)
 
     # - Comprehensions:
 
     @staticmethod
     def restore_ast_list_comp(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.elt = _NodeRestorer.restore(xml_node_children[0])
+        xml_node_children_comps = _XmlNodeChildrenGetter.get_children(xml_node, with_tag='comprehension')
+        py_node.generators = _NodeRestorer.restore_many(xml_node_children_comps)
 
     @staticmethod
     def restore_ast_set_comp(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.elt = _NodeRestorer.restore(xml_node_children[0])
+        xml_node_children_comps = _XmlNodeChildrenGetter.get_children(xml_node, with_tag='comprehension')
+        py_node.generators = _NodeRestorer.restore_many(xml_node_children_comps)
 
     @staticmethod
     def restore_ast_generator_exp(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.elt = _NodeRestorer.restore(xml_node_children[0])
+        xml_node_children_comps = _XmlNodeChildrenGetter.get_children(xml_node, with_tag='comprehension')
+        py_node.generators = _NodeRestorer.restore_many(xml_node_children_comps)
 
     @staticmethod
     def restore_ast_dict_comp(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.key = _NodeRestorer.restore(xml_node_children[0])
+        py_node.value = _NodeRestorer.restore(xml_node_children[1])
+        xml_node_children_comps = _XmlNodeChildrenGetter.get_children(xml_node, with_tag='comprehension')
+        py_node.generators = _NodeRestorer.restore_many(xml_node_children_comps)
 
     @staticmethod
     def restore_ast_comprehension(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.target = _NodeRestorer.restore(xml_node_children[0])
+        py_node.iter = _NodeRestorer.restore(xml_node_children[1])
+        py_node.ifs = _NodeRestorer.restore_many(xml_node_children[2:])
+        #  py_node.is_async = ? TODO: parser doesnt account async's
 
     # - Statements:
 
     @staticmethod
     def restore_ast_assign(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
         py_node_children = _NodeRestorer.restore_many(xml_node_children)
         py_node.targets = py_node_children[:-1]
         py_node.value = py_node_children[-1]
 
     @staticmethod
-    def restore_ast_ann_assign(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+    def restore_ast_ann_assign(xml_node: ET.Element, py_node: ast.AST) -> None:  # TODO: astmonkey.to_source doesn’t support AnnAssign
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.target = _NodeRestorer.restore(xml_node_children[0])
+        py_node.annotation = _NodeRestorer.restore(xml_node_children[1])
+        py_node.value = _NodeRestorer.restore(xml_node_children[2])
+        #  py_node.simple = ? TODO: parser doesnt account "simple" field
 
     @staticmethod
     def restore_ast_aug_assign(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.target = _NodeRestorer.restore(xml_node_children[0])
+        py_node.value = _NodeRestorer.restore(xml_node_children[1])
 
     @staticmethod
     def restore_ast_raise(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.exc = _NodeRestorer.restore(xml_node_children[0])
+        try:
+            py_node.cause = _NodeRestorer.restore(xml_node_children[1])
+        except IndexError:
+            py_node.cause = None
 
     @staticmethod
     def restore_ast_assert(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.test = _NodeRestorer.restore(xml_node_children[0])
+        try:
+            py_node.msg = _NodeRestorer.restore(xml_node_children[1])
+        except IndexError:
+            py_node.msg = None
 
     @staticmethod
     def restore_ast_delete(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.targets = _NodeRestorer.restore_many(xml_node_children)
 
     @staticmethod
     def restore_ast_pass(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        pass
 
     # - Imports:
 
     @staticmethod
     def restore_ast_import(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
         py_node.names = _NodeRestorer.restore_many(xml_node_children)
 
     @staticmethod
     def restore_ast_import_from(xml_node: ET.Element, py_node: ast.AST) -> None:
-        if 'value' in xml_node.attrib:
-            py_node.module = xml_node.attrib['value']
+        py_node.module = xml_node.attrib['value'] if 'value' in xml_node.attrib else None
+        py_node.level = int(xml_node.attrib['import_level'])
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.names = _NodeRestorer.restore_many(xml_node_children)
 
     @staticmethod
     def restore_ast_alias(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -271,65 +323,135 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_if(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
-
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
         py_node.test = _NodeRestorer.restore(xml_node_children[0])
 
-        # assert xml_node_children[1].tag == 'body'  # should be body in XML "If" layout
-        xml_body_children = _NodeRestorer.get_xml_node_children(xml_node_children[1])
-        py_node.body = _NodeRestorer.restore_many(xml_body_children)
+        xml_node_body = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='body')
+        xml_node_body_children = _XmlNodeChildrenGetter.get_children(xml_node_body)
+        py_node.body = _NodeRestorer.restore_many(xml_node_body_children)
 
-        # assert xml_node_children[2].tag == 'orelse'  # should be orelse in XML "If" layout
-        xml_orelse_children = _NodeRestorer.get_xml_node_children(xml_node_children[2])
-        py_node.orelse = _NodeRestorer.restore_many(xml_orelse_children)
+        xml_node_orelse = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='orelse')
+        if xml_node_orelse is not None:
+            xml_node_orelse_children = _XmlNodeChildrenGetter.get_children(xml_node_orelse)
+        else:
+            xml_node_orelse_children = []
+
+        py_node.orelse = _NodeRestorer.restore_many(xml_node_orelse_children)
 
     @staticmethod
     def restore_ast_for(xml_node: ET.Element, py_node: ast.AST) -> None:  # TODO: note in README that "type comment"s are not supported by parser
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
         py_node.target = _NodeRestorer.restore(xml_node_children[0])
         py_node.iter = _NodeRestorer.restore(xml_node_children[1])
-        # assert xml_node_children[2].tag == 'body'  # should be body in XML_For layout
-        py_node.body = [_NodeRestorer.restore(xml_body_item)
-                        for xml_body_item in xml_node_children[2]]
-        xml_orelse_children = _NodeRestorer.get_xml_node_children(xml_node_children[3])
-        py_node.orelse = _NodeRestorer.restore_many(xml_orelse_children)
+
+        xml_node_body = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='body')
+        xml_node_body_children = _XmlNodeChildrenGetter.get_children(xml_node_body)
+        py_node.body = _NodeRestorer.restore_many(xml_node_body_children)
+
+        xml_node_orelse = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='orelse')
+        if xml_node_orelse is not None:
+            xml_node_orelse_children = _XmlNodeChildrenGetter.get_children(xml_node_orelse)
+        else:
+            xml_node_orelse_children = []
+        py_node.orelse = _NodeRestorer.restore_many(xml_node_orelse_children)
 
     @staticmethod
     def restore_ast_while(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.test = _NodeRestorer.restore(xml_node_children[0])
+
+        xml_node_body = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='body')
+        xml_node_body_children = _XmlNodeChildrenGetter.get_children(xml_node_body)
+        py_node.body = _NodeRestorer.restore_many(xml_node_body_children)
+
+        xml_node_orelse = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='orelse')
+        if xml_node_orelse is not None:
+            xml_node_orelse_children = _XmlNodeChildrenGetter.get_children(xml_node_orelse)
+        else:
+            xml_node_orelse_children = []
+        py_node.orelse = _NodeRestorer.restore_many(xml_node_orelse_children)
 
     @staticmethod
     def restore_ast_break(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        pass
 
     @staticmethod
     def restore_ast_continue(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        pass
 
     @staticmethod
     def restore_ast_try(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
 
-    # @staticmethod
-    # def restore_ast_try_finally(xml_node: ET.Element, py_node: ast.AST) -> None:
-    #     raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
-    #
-    # @staticmethod
-    # def restore_ast_try_except(xml_node: ET.Element, py_node: ast.AST) -> None:
-    #     raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_body = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='body')
+        xml_node_body_children = _XmlNodeChildrenGetter.get_children(xml_node_body)
+        py_node.body = _NodeRestorer.restore_many(xml_node_body_children)
+
+        xml_node_handlers = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='handlers')
+        xml_node_handlers_children = _XmlNodeChildrenGetter.get_children(xml_node_handlers)
+        py_node.handlers = _NodeRestorer.restore_many(xml_node_handlers_children)
+
+        xml_node_orelse = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='orelse')
+        if xml_node_orelse:
+            xml_node_orelse_children = _XmlNodeChildrenGetter.get_children(xml_node_orelse)
+        else:
+            xml_node_orelse_children = []
+        py_node.orelse = _NodeRestorer.restore_many(xml_node_orelse_children)
+
+        xml_node_finalbody = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='finalbody')
+        if xml_node_finalbody is not None:
+            xml_node_finalbody_children = _XmlNodeChildrenGetter.get_children(xml_node_finalbody)
+        else:
+            xml_node_finalbody_children = []
+
+        py_node.finalbody = _NodeRestorer.restore_many(xml_node_finalbody_children)
 
     @staticmethod
     def restore_ast_except_handler(xml_node: ET.Element, py_node: ast.AST) -> None:
-        if 'value' in xml_node.attrib:
+        try:
             py_node.name = xml_node.attrib['value']
+        except KeyError:
+            py_node.name = None
+
+        xml_exc_type_node = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='type')
+        if xml_exc_type_node is not None:
+            py_node.type = _NodeRestorer.restore(_XmlNodeChildrenGetter.get_unique_child(xml_exc_type_node))
+
+        else:
+            py_node.type = None
+
+        xml_exc_body_node = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='body')
+        if xml_exc_body_node is not None:
+            py_node.body = _NodeRestorer.restore_many(_XmlNodeChildrenGetter.get_children(xml_exc_body_node))
+        else:
+            py_node.body = None
 
     @staticmethod
     def restore_ast_with(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_items = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='items')
+        if xml_node_items is not None:
+            xml_node_items_children = _XmlNodeChildrenGetter.get_children(xml_node_items)
+        else:
+            xml_node_items_children = []
+        py_node.items = _NodeRestorer.restore_many(xml_node_items_children)
+
+        xml_node_body = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='body')
+        if xml_node_body is not None:
+            xml_node_body_children = _XmlNodeChildrenGetter.get_children(xml_node_body)
+        else:
+            xml_node_body_children = []
+        py_node.body = _NodeRestorer.restore_many(xml_node_body_children)
+        # py_node.typecomment = ? TODO: parser doesn't account "typecomment" field
+
 
     @staticmethod
     def restore_ast_withitem(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.context_expr = _NodeRestorer.restore(xml_node_children[0])
+
+        try:
+            py_node.optional_vars = _NodeRestorer.restore(xml_node_children[1])
+        except IndexError:
+            py_node.optional_vars = None
 
     # - Function and class definitions:
 
@@ -339,7 +461,18 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_lambda(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        xml_node_arguments = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='arguments')
+        if xml_node_arguments is not None:
+            py_node.args = _NodeRestorer.restore(xml_node_arguments)
+        else:
+            py_node.args = None
+
+        try:
+            xml_node_body = xml_node_children[1]
+            py_node.body = _NodeRestorer.restore(xml_node_body)
+        except IndexError:
+            py_node.body = None
 
     @staticmethod
     def restore_ast_arguments(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -351,24 +484,39 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_return(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_value = _XmlNodeChildrenGetter.get_unique_child(xml_node)
+        if xml_node_value is not None:
+            py_node.value = _NodeRestorer.restore(xml_node_value)
+        else:
+            py_node.value = None
 
     @staticmethod
     def restore_ast_yield(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_value = _XmlNodeChildrenGetter.get_unique_child(xml_node)
+        if xml_node_value is not None:
+            py_node.value = _NodeRestorer.restore(xml_node_value)
+        else:
+            py_node.value = None
 
     @staticmethod
     def restore_ast_yield_from(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_value = _XmlNodeChildrenGetter.get_unique_child(xml_node)
+        if xml_node_value is not None:
+            py_node.value = _NodeRestorer.restore(xml_node_value)
+        else:
+            py_node.value = None
 
     @staticmethod
     def restore_ast_global(xml_node: ET.Element, py_node: ast.AST) -> None:
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node, with_tag='identifier')
         py_node.names = [elem.attrib['value']
-                         for elem in xml_node.findall('identifier')]
+                         for elem in xml_node_children]
 
     @staticmethod
     def restore_ast_nonlocal(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node, with_tag='identifier')
+        py_node.names = [elem.attrib['value']
+                         for elem in xml_node_children]
 
     @staticmethod
     def restore_ast_class_def(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -396,19 +544,18 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_module(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _NodeRestorer.get_xml_node_children(xml_node)
-        if xml_node_children and ('body' in py_node._fields) and not hasattr(py_node, 'body'):
-            py_node.body = [_NodeRestorer.restore(xml_node_child) for xml_node_child in xml_node_children]
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.body = _NodeRestorer.restore_many(xml_node_children)
 
     @staticmethod
     def restore_ast_interactive(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.body = _NodeRestorer.restore_many(xml_node_children)
 
     @staticmethod
     def restore_ast_expression(xml_node: ET.Element, py_node: ast.AST) -> None:
-        raise NotImplementedError(f'Restorer for {type(py_node).__name__} is unsupported yet')
-
-    # No default handler.
+        xml_node_child = _XmlNodeChildrenGetter.get_unique_child(xml_node)
+        py_node.body = _NodeRestorer.restore(xml_node_child)
 
     # Helper methods:
 
@@ -423,12 +570,6 @@ class _NodeRestorer:
     def restore_many(xml_node_list: List[ET.Element]) -> List[ast.AST]:
         result = [_NodeRestorer.restore(xml_node) for xml_node in xml_node_list]
         return result
-
-    @staticmethod
-    def get_xml_node_children(xml_node, with_tag=None):
-        if with_tag:
-            return xml_node.findall(with_tag)
-        return xml_node.findall('*')
 
 
 _NodeRestorer.py_node_type_to_restorer = {
