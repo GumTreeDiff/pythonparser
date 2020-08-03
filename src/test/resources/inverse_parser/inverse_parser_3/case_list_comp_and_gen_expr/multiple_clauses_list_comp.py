@@ -1,0 +1,1 @@
+(n**2 for n in it if n>5 if n<10)

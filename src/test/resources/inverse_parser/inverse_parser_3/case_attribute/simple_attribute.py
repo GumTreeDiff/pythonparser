@@ -1,0 +1,1 @@
+a = some_object.attribute_name

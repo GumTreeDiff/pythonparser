@@ -1,0 +1,1 @@
+[ord(c) for line in file for c in line]

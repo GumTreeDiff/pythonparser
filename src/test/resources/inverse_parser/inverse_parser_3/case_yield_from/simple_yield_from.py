@@ -1,0 +1,1 @@
+yield from some_generator()
