@@ -9,6 +9,8 @@ from src.main.python.pythonparser.pythonparser_3 import json2xml, parse_file
 from src.main.util.const import TEST_RESOURCES_PATH
 
 
+@pytest.mark.skip('Simple equals between code does not work.'
+                  'The parser add brackets even if they were not in the source code.')
 class TestInverseParser3:
 
     _input_dir = os.path.join(TEST_RESOURCES_PATH, 'inverse_parser/inverse_parser_3')

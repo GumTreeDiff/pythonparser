@@ -46,6 +46,8 @@ class TestBrackets:
         create_file(source_code, source_code_file)
         return source_code_file
 
+    # Todo: fix the parser, because it fails on the following files:
+    # logic/source_1.py, logic/source_2.py
     @pytest.mark.parametrize('source', [_ for _ in EXPRESSIONS_SOURCES])
     def test_expressions(self, source: str) -> None:
         log.info(f'Start checking source: {source}')
