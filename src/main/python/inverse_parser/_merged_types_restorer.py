@@ -22,7 +22,10 @@ class _MergedTypesRestorer:
         """
         types = xml_node.tag.split('_')
         py_node_type_name, merged_types_names = types[0], types[1:]
-        py_node_type = _py_node_type_name_to_ast_type[py_node_type_name]
+        if py_node_type_name == 'NoneType':
+            py_node_type = type(None)
+        else:
+            py_node_type = _py_node_type_name_to_ast_type[py_node_type_name]
         merged_types = [_py_node_type_name_to_ast_type[merged_type_name]
                         for merged_type_name in merged_types_names]
         return py_node_type, merged_types
