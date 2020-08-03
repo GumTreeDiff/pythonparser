@@ -34,6 +34,10 @@ class _AttributeSetter:
 
         elif value_type == bytes:
             value = value_type(str_val_repr[2:len(str_val_repr) - 1].encode(DEFAULT_ENCODING))
+
+        elif value_type == bool:
+            value = str_val_repr == 'True'
+
         else:
             value = value_type(str_val_repr)
 
