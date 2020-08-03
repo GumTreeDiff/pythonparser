@@ -48,9 +48,8 @@ def parse_file(filename: str) -> List[JsonNodeType]:
             json_node['end_lineno'] = str(py_node.end_lineno)
             json_node['end_col'] = str(py_node.end_col_offset)
         else:
-            raise RuntimeError(f'Failed to localize {type(py_node).__name__} node.'
+            raise RuntimeError(f'Failed to localize {type(py_node).__name__} node. '
                                f'Not enough location attributes for localization')
-
 
     def gen_identifier(identifier: str, node_type: str = 'identifier', py_node: ast.AST = None) -> int:
         pos = len(json_tree)
@@ -91,7 +90,7 @@ def parse_file(filename: str) -> List[JsonNodeType]:
             json_node['value_type'] = type(py_node.value).__name__
         elif isinstance(py_node, ast.Num):
             json_node['value'] = py_node.n
-            json_node['value_type'] = type(py_node.value).__name__
+            json_node['value_type'] = type(py_node.n).__name__
         elif isinstance(py_node, ast.Str):
             json_node['value'] = py_node.s
         elif isinstance(py_node, ast.alias):
@@ -108,11 +107,14 @@ def parse_file(filename: str) -> List[JsonNodeType]:
         elif isinstance(py_node, ast.ImportFrom):
             if py_node.module:
                 json_node['value'] = py_node.module
-        elif isinstance(py_node, ast.Global):
+            json_node['import_level'] = str(py_node.level)
+
+        elif isinstance(py_node, (ast.Global, ast.Nonlocal)):
             for n in py_node.names:
                 children.append(gen_identifier(n, py_node=py_node))
         elif isinstance(py_node, ast.keyword):
             json_node['value'] = py_node.arg
+            json_node['value_type'] = type(py_node.arg).__name__
         elif isinstance(py_node, ast.arg):
             json_node['value'] = py_node.arg
 
@@ -198,7 +200,7 @@ def json2xml(tree: List[JsonNodeType]) -> str:
     def convert_node(i: int, indent_level: int = 0) -> List[str]:
         node = tree[i]
         line = '\t' * indent_level + '<{}'.format(node['type'])
-        for key in ['value', 'value_type', 'lineno', 'col', 'end_lineno', 'end_col']:
+        for key in ['value', 'value_type', 'lineno', 'col', 'end_lineno', 'end_col', 'import_level']:
             if key in node:
                 line += (' {}={}'.format(key, quoteattr(str(node[key]))))
         line += '>'
