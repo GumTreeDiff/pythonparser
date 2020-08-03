@@ -35,6 +35,9 @@ def parse_file(filename: str) -> List[JsonNodeType]:
     json_tree = []
 
     def localize(py_node: ast.AST, json_node: JsonNodeType) -> None:
+        if py_node is None:
+            return
+
         location_attributes = (['first_token', 'last_token'],
                                ['lineno', 'col_offset', 'end_lineno', 'end_col_offset'])
         if all(hasattr(py_node, location_attr) for location_attr in location_attributes[0]):
@@ -80,6 +83,7 @@ def parse_file(filename: str) -> List[JsonNodeType]:
         json_node['type'] = type(py_node).__name__
         localize(py_node, json_node)
         children = []
+
         if isinstance(py_node, ast.Name):
             json_node['value'] = py_node.id
         elif isinstance(py_node, ast.NameConstant):
@@ -97,7 +101,7 @@ def parse_file(filename: str) -> List[JsonNodeType]:
             json_node['value'] = py_node.name
             if py_node.asname:
                 children.append(gen_identifier(py_node.asname, py_node=py_node))
-        elif isinstance(py_node, ast.FunctionDef):
+        elif isinstance(py_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             json_node['value'] = py_node.name
         elif isinstance(py_node, ast.ExceptHandler):
             if py_node.name:
@@ -119,7 +123,7 @@ def parse_file(filename: str) -> List[JsonNodeType]:
             json_node['value'] = py_node.arg
 
         # Process children.
-        if isinstance(py_node, ast.For):
+        if isinstance(py_node, (ast.For, ast.AsyncFor)):
             children.append(traverse(py_node.target))
             children.append(traverse(py_node.iter))
             children.append(traverse_list(py_node.body, 'body', py_node))
@@ -130,7 +134,7 @@ def parse_file(filename: str) -> List[JsonNodeType]:
             children.append(traverse_list(py_node.body, 'body', py_node))
             if py_node.orelse:
                 children.append(traverse_list(py_node.orelse, 'orelse', py_node))
-        elif isinstance(py_node, ast.With):
+        elif isinstance(py_node, (ast.With, ast.AsyncWith)):
             children.append(traverse_list(py_node.items, 'items', py_node))
             children.append(traverse_list(py_node.body, 'body', py_node))
         elif isinstance(py_node, ast.withitem):
@@ -145,10 +149,11 @@ def parse_file(filename: str) -> List[JsonNodeType]:
             if py_node.finalbody:
                 children.append(traverse_list(py_node.finalbody, 'finalbody', py_node))
         elif isinstance(py_node, ast.arguments):
+            children.append(traverse_list(py_node.posonlyargs, 'posonlyargs', py_node))
             children.append(traverse_list(py_node.args, 'args', py_node))
+            children.append(traverse_list(py_node.kwonlyargs, 'kwonlyargs', py_node))
+            children.append(traverse_list(py_node.kw_defaults, 'kw_defaults', py_node))
             children.append(traverse_list(py_node.defaults, 'defaults', py_node))
-            children.append(traverse_list(py_node.kwonlyargs, 'defaults', py_node))
-            children.append(traverse_list(py_node.kw_defaults, 'defaults', py_node))
             if py_node.vararg:
                 children.append(gen_identifier(py_node.vararg.arg, 'vararg', py_node.vararg))
             if py_node.kwarg:
@@ -159,13 +164,14 @@ def parse_file(filename: str) -> List[JsonNodeType]:
             children.append(traverse_list(py_node.body, 'body', py_node))
         elif isinstance(py_node, ast.ClassDef):
             children.append(traverse_list(py_node.bases, 'bases', py_node))
+            children.append(traverse_list(py_node.keywords, 'keywords', py_node))
             children.append(traverse_list(py_node.body, 'body', py_node))
             children.append(traverse_list(py_node.decorator_list, 'decorator_list', py_node))
-        elif isinstance(py_node, ast.FunctionDef):
+        elif isinstance(py_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             children.append(traverse(py_node.args))
             children.append(traverse_list(py_node.body, 'body', py_node))
             children.append(traverse_list(py_node.decorator_list, 'decorator_list', py_node))
-        else:
+        elif py_node is not None:
             # Default handling: iterate over children.
             for child in ast.iter_child_nodes(py_node):
                 if isinstance(child, ast.expr_context) or\
