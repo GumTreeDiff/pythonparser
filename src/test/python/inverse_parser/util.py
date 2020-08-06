@@ -15,7 +15,7 @@ class InverseParserTestsUtil:
         :param filename: path to .py file with source
         :return: source from provided file as string
         """
-        return read_file_to_string(filename)
+        return read_file_to_string(filename).strip('\n')
 
     @staticmethod
     def source_to_xml_to_source(filename: str) -> str:
@@ -30,4 +30,4 @@ class InverseParserTestsUtil:
         """
         xml_str = json2xml(parse_file(filename))
         inverse_parser = InverseParser(xml_str=xml_str)
-        return inverse_parser.get_source()
+        return inverse_parser.get_source().strip('\n')

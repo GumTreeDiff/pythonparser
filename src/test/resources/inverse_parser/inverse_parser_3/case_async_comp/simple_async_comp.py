@@ -1,1 +1,0 @@
-[i async for i in soc]

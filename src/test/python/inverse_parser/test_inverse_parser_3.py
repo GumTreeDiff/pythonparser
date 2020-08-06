@@ -1,43 +1,42 @@
-# Copyright (c) Aniskov N.
+# Copyright (c) Aniskov N., Birillo A.
 
 import os
+import logging
+from typing import List, Tuple
 
 import pytest
 
-from src.main.python.inverse_parser.inverse_parser_3 import *
-from src.main.python.pythonparser.pythonparser_3 import json2xml, parse_file
-from src.main.util.const import TEST_RESOURCES_PATH
+from src.test.python.inverse_parser.util import InverseParserTestsUtil
+from src.main.util.const import TEST_RESOURCES_PATH, LOGGER_NAME, FILE_SYSTEM_ITEM
+from src.main.util.file_util import get_all_file_system_items, match_condition, pair_in_and_out_files
+
+log = logging.getLogger(LOGGER_NAME)
 
 
-@pytest.mark.skip('Simple equals between code does not work.'
-                  'The parser add brackets even if they were not in the source code.')
+INPUT_DIR = os.path.join(TEST_RESOURCES_PATH, 'inverse_parser/inverse_parser_3')
+ALL_TEST_DIR = get_all_file_system_items(INPUT_DIR, lambda x: 'case' in x, FILE_SYSTEM_ITEM.SUBDIR)
+
+
 class TestInverseParser3:
 
-    _input_dir = os.path.join(TEST_RESOURCES_PATH, 'inverse_parser/inverse_parser_3')
+    # The function returns list of tests pairs. For example: [(in_1, out_1), (in_2, out_2)]
+    @staticmethod
+    def __get_test_in_and_out_files(root: str) -> List[Tuple[str, str]]:
+        in_files = get_all_file_system_items(root, match_condition(r'in_\d+.py'))
+        out_files = get_all_file_system_items(root, match_condition(r'out_\d+.py'))
+        assert len(out_files) == len(in_files), 'Length of out files list does not equal in files list'
+        assert len(in_files) != 0, f'Number of test files is zero! Root for files is {root}'
+        return pair_in_and_out_files(in_files, out_files)
 
-    test_cases_dirs = \
-        [
-            os.path.join(_input_dir, 'case_for'),
-
-            os.path.join(_input_dir, 'case_import'),
-
-            os.path.join(_input_dir, 'case_simple_ops')
-
-        ]
-
-    # Tests:
-
-    @pytest.mark.parametrize(
-        'cases_dirs',
-        test_cases_dirs
-    )
-    def test_generated_code_is_eq_to_original(self, cases_dirs: str) -> None:
-        for entry in os.scandir(cases_dirs):
-            xml_ast_str = json2xml(parse_file(entry.path))
-            inverse_parser = InverseParser(xml_ast_str)
-
-            with open(entry.path) as in_f:
-                real_source = in_f.read()
-            generated_source = inverse_parser.get_source()
-
-            assert real_source == generated_source
+    @pytest.mark.parametrize('case_dir', ALL_TEST_DIR)
+    def test_generated_code_is_eq_to_original(self, case_dir: str, subtests) -> None:
+        log.info(f'Start testing {case_dir} folder')
+        in_and_out_files = self.__get_test_in_and_out_files(case_dir)
+        log.info(f'Have collected {len(in_and_out_files)} pairs for tests')
+        for in_file, out_file in in_and_out_files:
+            log.info(f'Current in file is {in_file}, current out file us: {out_file}')
+            with subtests.test():
+                actual_out = InverseParserTestsUtil.source_to_xml_to_source(in_file)
+                expected_out = InverseParserTestsUtil.get_source_from_file(out_file)
+                log.info(f'Expected out is:\n{expected_out}\nActual out is:\n{actual_out}')
+                assert actual_out == expected_out
