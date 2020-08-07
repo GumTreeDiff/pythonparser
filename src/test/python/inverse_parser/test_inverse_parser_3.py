@@ -35,7 +35,7 @@ class TestInverseParser3:
         log.info(f'Have collected {len(in_and_out_files)} pairs for tests')
         for in_file, out_file in in_and_out_files:
             log.info(f'Current in file is {in_file}, current out file us: {out_file}')
-            with subtests.test():
+            with subtests.test(in_file=in_file, out_file=out_file):
                 actual_out = InverseParserTestsUtil.source_to_xml_to_source(in_file)
                 expected_out = InverseParserTestsUtil.get_source_from_file(out_file)
                 log.info(f'Expected out is:\n{expected_out}\nActual out is:\n{actual_out}')
