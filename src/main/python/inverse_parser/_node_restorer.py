@@ -197,13 +197,29 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_slice(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
-        py_node.lower = _NodeRestorer.restore(xml_node_children[0])
-        py_node.upper = _NodeRestorer.restore(xml_node_children[1])
-        try:
-            py_node.step = _NodeRestorer.restore(xml_node_children[2])
-        except IndexError:
+        xml_node_lower = _XmlNodeChildrenGetter.get_unique_child(xml_node, 'lower')
+        xml_node_step = _XmlNodeChildrenGetter.get_unique_child(xml_node, 'step')
+        xml_node_upper = _XmlNodeChildrenGetter.get_unique_child(xml_node, 'upper')
+
+        xml_node_lower_val = _XmlNodeChildrenGetter.get_unique_child(xml_node_lower)
+        xml_node_step_val = _XmlNodeChildrenGetter.get_unique_child(xml_node_step)
+        xml_node_upper_val = _XmlNodeChildrenGetter.get_unique_child(xml_node_upper)
+
+        if xml_node_lower_val is not None:
+            py_node.lower = _NodeRestorer.restore(xml_node_lower_val)
+        else:
+            py_node.lower = None
+
+        if xml_node_step_val is not None:
+            py_node.step = _NodeRestorer.restore(xml_node_step_val)
+        else:
             py_node.step = None
+
+        if xml_node_upper_val is not None:
+            py_node.upper = _NodeRestorer.restore(xml_node_upper_val)
+        else:
+            py_node.upper = None
+
 
     @staticmethod
     def restore_ast_ext_slice(xml_node: ET.Element, py_node: ast.AST) -> None:
