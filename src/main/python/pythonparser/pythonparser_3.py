@@ -63,17 +63,27 @@ def parse_file(filename: str) -> List[JsonNodeType]:
         localize(py_node, json_node)
         return pos
 
-    def traverse_list(py_ast_nodes: List[ast.AST], node_type: str = 'list', node: ast.AST = None) -> int:
+    def traverse_list(py_ast_nodes: List[ast.AST], node_type: str = 'list', py_node: ast.AST = None) -> int:
         pos = len(json_tree)
         json_node = {}
         json_tree.append(json_node)
         json_node['type'] = node_type
-        localize(node, json_node)
+        localize(py_node, json_node)
         children = []
         for item in py_ast_nodes:
             children.append(traverse(item))
         if len(children) != 0:
             json_node['children'] = children
+        return pos
+
+    def create_child(py_node_child: ast.AST, node_type: str, py_node: ast.AST = None):
+        pos = len(json_tree)
+        json_node = {}
+        json_tree.append(json_node)
+        json_node['type'] = node_type
+        localize(py_node, json_node)
+        if py_node_child is not None:
+            json_node['children'] = [traverse(py_node_child)]
         return pos
 
     def traverse(py_node: ast.AST) -> Union[JsonNodeType, int]:
@@ -171,6 +181,12 @@ def parse_file(filename: str) -> List[JsonNodeType]:
             children.append(traverse(py_node.args))
             children.append(traverse_list(py_node.body, 'body', py_node))
             children.append(traverse_list(py_node.decorator_list, 'decorator_list', py_node))
+
+        elif isinstance(py_node, ast.Slice):
+            children.append(create_child(py_node.lower, 'lower', py_node))
+            children.append(create_child(py_node.step, 'step', py_node))
+            children.append(create_child(py_node.upper, 'upper', py_node))
+
         elif py_node is not None:
             # Default handling: iterate over children.
             for child in ast.iter_child_nodes(py_node):
