@@ -2,9 +2,10 @@
 
 import os
 from enum import Enum
+from pathlib import Path
 
 # src folder
-ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../')
+ROOT_DIR = os.path.join(Path(__file__).resolve().parents[3], 'src')
 TEST_RESOURCES_PATH = os.path.join(ROOT_DIR, 'test', 'resources')
 
 DEFAULT_ENCODING = 'utf-8'
