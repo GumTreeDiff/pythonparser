@@ -65,6 +65,8 @@ def get_content_from_file(file: str, encoding: str = ISO_ENCODING, to_strip_nl: 
 
 
 def pair_in_and_out_files(in_files: list, out_files: list) -> List[Tuple[str, str]]:
+    if len(out_files) != len(in_files):
+        raise ValueError('Length of out files list does not equal in files list')
     pairs = []
     for in_file in in_files:
         out_file = re.sub(r'in(?=[^in]*$)', 'out', in_file)

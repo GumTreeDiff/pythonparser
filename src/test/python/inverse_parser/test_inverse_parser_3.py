@@ -24,7 +24,6 @@ class TestInverseParser3:
     def __get_test_in_and_out_files(root: str) -> List[Tuple[str, str]]:
         in_files = get_all_file_system_items(root, match_condition(r'in_\d+.py'))
         out_files = get_all_file_system_items(root, match_condition(r'out_\d+.py'))
-        assert len(out_files) == len(in_files), 'Length of out files list does not equal in files list'
         assert len(in_files) != 0, f'Number of test files is zero! Root for files is {root}'
         return pair_in_and_out_files(in_files, out_files)
 
