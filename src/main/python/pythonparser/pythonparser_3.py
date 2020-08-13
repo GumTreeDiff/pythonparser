@@ -43,12 +43,12 @@ def parse_file(filename: str) -> List[JsonNodeType]:
         if all(hasattr(py_node, location_attr) for location_attr in location_attributes[0]):
             json_node['lineno'] = str(py_node.first_token.start[0])
             json_node['col'] = str(py_node.first_token.start[1])
-            json_node['end_lineno'] = str(py_node.last_token.end[0])
+            json_node['end_line_no'] = str(py_node.last_token.end[0])
             json_node['end_col'] = str(py_node.last_token.end[1])
         elif all(hasattr(py_node, location_attr) for location_attr in location_attributes[1]):
             json_node['lineno'] = str(py_node.lineno)
             json_node['col'] = str(py_node.col_offset)
-            json_node['end_lineno'] = str(py_node.end_lineno)
+            json_node['end_line_no'] = str(py_node.end_lineno)
             json_node['end_col'] = str(py_node.end_col_offset)
         else:
             raise RuntimeError(f'Failed to localize {type(py_node).__name__} node. '
@@ -222,7 +222,7 @@ def json2xml(tree: List[JsonNodeType]) -> str:
     def convert_node(i: int, indent_level: int = 0) -> List[str]:
         node = tree[i]
         line = '\t' * indent_level + '<{}'.format(node['type'])
-        for key in ['value', 'value_type', 'lineno', 'col', 'end_lineno', 'end_col', 'import_level']:
+        for key in ['value', 'value_type', 'lineno', 'col', 'end_line_no', 'end_col', 'import_level']:
             if key in node:
                 line += (' {}={}'.format(key, quoteattr(str(node[key]))))
         line += '>'

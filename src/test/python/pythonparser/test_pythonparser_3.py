@@ -101,9 +101,9 @@ class TestPythonParser3:
     @staticmethod
     @pytest.fixture(scope='function',
                     params=[
-                        ({'lineno': '4', 'col': '0', 'end_lineno': '24', 'end_col': '63'}, 'FunctionDef'),
-                        ({'lineno': '16', 'col': '18', 'end_lineno': '16', 'end_col': '27'}, 'BinOp_LShift'),
-                        ({'lineno': '16', 'col': '18', 'end_lineno': '16', 'end_col': '22'}, 'Subscript_Load')
+                        ({'lineno': '4', 'col': '0', 'end_line_no': '24', 'end_col': '63'}, 'FunctionDef'),
+                        ({'lineno': '16', 'col': '18', 'end_line_no': '16', 'end_col': '27'}, 'BinOp_LShift'),
+                        ({'lineno': '16', 'col': '18', 'end_line_no': '16', 'end_col': '22'}, 'Subscript_Load')
                     ]
                     )
     def token_params_sample(request) -> Tuple[Dict[str, str], str]:

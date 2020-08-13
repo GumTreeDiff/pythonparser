@@ -576,7 +576,7 @@ class _NodeRestorer:
         py_node.col_offset = int(xml_node.attrib['col'])
         py_node.end_col_offset = int(xml_node.attrib['end_col'])
         py_node.lineno = int(xml_node.attrib['lineno'])
-        py_node.end_lineno = int(xml_node.attrib['end_lineno'])
+        py_node.end_lineno = int(xml_node.attrib['end_line_no'])
 
     @staticmethod
     def restore_many(xml_node_list: List[ET.Element]) -> List[ast.AST]:
