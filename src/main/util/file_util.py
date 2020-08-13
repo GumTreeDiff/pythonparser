@@ -1,7 +1,8 @@
 # Copyright (c) Aniskov N., Birillo A.
 
 import os
-from typing import Callable, List
+import re
+from typing import Callable, List, Tuple
 
 from src.main.util.const import FILE_SYSTEM_ITEM, ISO_ENCODING
 
@@ -14,6 +15,12 @@ def all_items_condition(name: str) -> bool:
 
 def is_init_file(name: str) -> bool:
     return '__init__.py' in name
+
+
+def match_condition(regex: str) -> ItemCondition:
+    def does_name_match(name: str) -> bool:
+        return re.fullmatch(regex, name) is not None
+    return does_name_match
 
 
 # To get all files or subdirs (depends on the last parameter) from root that match item_condition
@@ -55,3 +62,15 @@ def get_content_from_file(file: str, encoding: str = ISO_ENCODING, to_strip_nl: 
     with open(file, 'r', encoding=encoding) as f:
         content = f.read()
         return content if not to_strip_nl else content.rstrip('\n')
+
+
+def pair_in_and_out_files(in_files: list, out_files: list) -> List[Tuple[str, str]]:
+    if len(out_files) != len(in_files):
+        raise ValueError('Length of out files list does not equal in files list')
+    pairs = []
+    for in_file in in_files:
+        out_file = re.sub(r'in(?=[^in]*$)', 'out', in_file)
+        if out_file not in out_files:
+            raise ValueError(f'List of out files does not contain a file for {in_file}')
+        pairs.append((in_file, out_file))
+    return pairs

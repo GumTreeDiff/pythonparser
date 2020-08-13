@@ -2,3 +2,4 @@ jsontree
 asttokens
 pytest
 astmonkey
+pytest-subtests
