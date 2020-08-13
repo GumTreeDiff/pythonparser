@@ -1,0 +1,1 @@
+assert False, 'always false'
