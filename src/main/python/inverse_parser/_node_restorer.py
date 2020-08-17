@@ -1,12 +1,17 @@
 # Copyright (c) Aniskov N.
 
 import ast
+import logging
 import xml.etree.ElementTree as ET
 from typing import *
 
-from src.main.python.inverse_parser._merged_types_restorer import _MergedTypesRestorer
 from src.main.python.inverse_parser._attribute_setter import _AttributeSetter
+from src.main.python.inverse_parser._merged_types_restorer import _MergedTypesRestorer
 from src.main.python.inverse_parser._xml_node_children_getter import _XmlNodeChildrenGetter
+from src.main.util.const import LOGGER_NAME
+from src.main.util.log_util import log_and_raise_error
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class _NodeRestorer:
@@ -29,7 +34,9 @@ class _NodeRestorer:
             restore_py_node = _NodeRestorer.py_node_type_to_restorer[py_node_type]
 
         except KeyError:
-            raise RuntimeError(f'Unknown node type: {py_node_type}.')
+            log_and_raise_error(f'Unknown node type: {py_node_type}.',
+                                logger,
+                                RuntimeError)
 
         restore_py_node(xml_node, py_node)
         return py_node
@@ -267,7 +274,7 @@ class _NodeRestorer:
         py_node.target = _NodeRestorer.restore(xml_node_children[0])
         py_node.iter = _NodeRestorer.restore(xml_node_children[1])
         py_node.ifs = _NodeRestorer.restore_many(xml_node_children[2:])
-        #  py_node.is_async = ? TODO: parser doesnt account async's
+        #  py_node.is_async = ? TODO: parser doesn't account async's
 
     # - Statements:
 
@@ -284,7 +291,7 @@ class _NodeRestorer:
         py_node.target = _NodeRestorer.restore(xml_node_children[0])
         py_node.annotation = _NodeRestorer.restore(xml_node_children[1])
         py_node.value = _NodeRestorer.restore(xml_node_children[2])
-        #  py_node.simple = ? TODO: parser doesnt account "simple" field
+        #  py_node.simple = ? TODO: parser doesn't account "simple" field
 
     @staticmethod
     def restore_ast_aug_assign(xml_node: ET.Element, py_node: ast.AST) -> None:
