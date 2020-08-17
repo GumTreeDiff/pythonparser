@@ -1,11 +1,17 @@
 # Copyright (c) Aniskov N.
 
 import ast
+import logging
 import xml.etree.ElementTree as ET
 
-from astmonkey import visitors
+import astor
 
 from src.main.python.inverse_parser._node_restorer import _NodeRestorer
+from src.main.util.const import LOGGER_NAME
+from src.main.util.file_util import get_content_from_file
+from src.main.util.log_util import log_and_raise_error
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class InverseParser:
@@ -19,10 +25,14 @@ class InverseParser:
         :param xml_str: string, containing AST in XML format
         """
         if not filename and not xml_str:
-            raise ValueError('Either "filename" or "xml_str" must not be None.')
+            log_and_raise_error('Either "filename" or "xml_str" must not be None.',
+                                logger,
+                                ValueError)
 
         if filename and xml_str:
-            raise ValueError('Only one of the "filename" and "xml_str" must be provided. Not both.')
+            log_and_raise_error('Only one of the "filename" and "xml_str" must be provided. Not both.',
+                                logger,
+                                ValueError)
 
         if filename:
             self.__init_xml_ast(filename)
@@ -36,7 +46,7 @@ class InverseParser:
         :return: Python 3 source code
         """
         py_ast = self.get_py_ast()
-        generated_src = visitors.to_source(py_ast)
+        generated_src = astor.to_source(py_ast)
         return generated_src
 
     def get_py_ast(self) -> ast.AST:
@@ -54,6 +64,5 @@ class InverseParser:
         return self.xml_ast_
 
     def __init_xml_ast(self, filename: str) -> None:
-        with open(filename, 'rt') as f:
-            xml_str = f.read()
-            self.xml_ast_ = ET.fromstring(xml_str)
+        xml_str = get_content_from_file(filename, to_strip_nl=False)
+        self.xml_ast_ = ET.fromstring(xml_str)
