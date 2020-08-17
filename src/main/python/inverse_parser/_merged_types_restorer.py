@@ -1,7 +1,14 @@
 # Copyright (c) Aniskov N.
 
 import ast
+import logging
+import xml.etree.ElementTree as ET
+from typing import Tuple, Union, Any, List
 
+from src.main.util.const import LOGGER_NAME
+from src.main.util.log_util import log_and_raise_error
+
+logger = logging.getLogger(LOGGER_NAME)
 
 _py_node_type_name_to_ast_type = \
     dict([(name, cls) for name, cls in ast.__dict__.items() if isinstance(cls, type)])
@@ -14,7 +21,7 @@ class _MergedTypesRestorer:
     """
 
     @staticmethod
-    def get_types_from_tag(xml_node):
+    def get_types_from_tag(xml_node: ET.Element) -> Tuple[Union[type, Any], List[type]]:
         """
         :param xml_node: node of AST in XML format
         :return py_node_type: type of corresponding Python AST node
@@ -31,11 +38,10 @@ class _MergedTypesRestorer:
         return py_node_type, merged_types
 
     @staticmethod
-    def set_ctx_and_ops(py_node, merged_types):
+    def set_ctx_and_ops(py_node: ast.AST, merged_types: List[type]) -> None:
         """
         :param py_node: Python ast tree node
         :param merged_types: type of operators or context extracted from XML tag
-        :return:
         """
         if not merged_types:
             return
@@ -50,4 +56,7 @@ class _MergedTypesRestorer:
             py_node.ops = [op_type() for op_type in merged_types]
 
         else:
-            raise RuntimeError(f'Failed to restore context or operators')
+            log_and_raise_error(f'Failed to restore context or operators',
+                                logger,
+                                RuntimeError)
+
