@@ -3,3 +3,4 @@
 /venv/
 **/__pycache__
 /src/test/logs.log
+/src/main/logs.log
