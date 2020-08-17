@@ -14,6 +14,8 @@ jobs:
       - run:
           command: pip install -r requirements.txt
       - run:
+          command: pip install -r requirements-test.txt
+      - run:
           command: python3 -m pytest
           name: Test
 
