@@ -17,7 +17,9 @@ We are going to support Python 3.8 in **python3** parser:
     `pip install -r requirements.txt`
   
 - python3:  
-    `pip3 install -r requirements.txt`
+    `pip3 install -r requirements.txt`  
+- python3 tests:
+    `pip3 install -r requirements-test.txt` 
 
 ## Run parser
 - python2:  
