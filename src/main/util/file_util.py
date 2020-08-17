@@ -1,10 +1,15 @@
 # Copyright (c) Aniskov N., Birillo A.
 
+import logging
 import os
 import re
 from typing import Callable, List, Tuple
 
 from src.main.util.const import FILE_SYSTEM_ITEM, ISO_ENCODING
+from src.main.util.const import LOGGER_NAME
+from src.main.util.log_util import log_and_raise_error
+
+logger = logging.getLogger(LOGGER_NAME)
 
 ItemCondition = Callable[[str], bool]
 
@@ -66,11 +71,15 @@ def get_content_from_file(file: str, encoding: str = ISO_ENCODING, to_strip_nl: 
 
 def pair_in_and_out_files(in_files: list, out_files: list) -> List[Tuple[str, str]]:
     if len(out_files) != len(in_files):
-        raise ValueError('Length of out files list does not equal in files list')
+        log_and_raise_error('Length of out files list does not equal in files list',
+                            logger,
+                            ValueError)
     pairs = []
     for in_file in in_files:
         out_file = re.sub(r'in(?=[^in]*$)', 'out', in_file)
         if out_file not in out_files:
-            raise ValueError(f'List of out files does not contain a file for {in_file}')
+            log_and_raise_error(f'List of out files does not contain a file for {in_file}',
+                                logger,
+                                ValueError)
         pairs.append((in_file, out_file))
     return pairs
