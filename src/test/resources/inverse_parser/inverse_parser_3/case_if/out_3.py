@@ -1,9 +1,15 @@
 def foo():
     pass
+
+
 def foo_2():
     pass
+
+
 def foo_3():
     pass
+
+
 a = 5
 if a > 0:
     foo()

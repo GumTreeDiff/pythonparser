@@ -1,1 +1,1 @@
-f'sin({a}) is {sin(a):.3}'
+e = f'sin({a}) is {sin(a):.3}'

@@ -6,6 +6,6 @@ print('('.join(s1), end='')
 if l % 2 == 1:
     ch = s[l // 2]
     if l > 1:
-        ch = ('(' + ch) + ')'
+        ch = '(' + ch + ')'
     print(ch, sep='', end='')
 print(')'.join(s2))

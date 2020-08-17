@@ -1,1 +1,1 @@
-x = lambda a, b, c: ((a + b) + c)
+x = lambda a, b, c: a + b + c

@@ -1,1 +1,1 @@
-x = lambda: (True)
+x = lambda : True
