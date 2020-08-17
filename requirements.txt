@@ -1,5 +1,3 @@
 jsontree
-asttokens
-pytest
-astmonkey
-pytest-subtests
+asttokens~=2.0.4
+astor~=0.8.1
