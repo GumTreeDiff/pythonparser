@@ -11,11 +11,7 @@ class _XmlNodeChildrenGetter:
 
     @staticmethod
     def get_unique_child(xml_node, with_tag=None):
-        if with_tag:
-            res = xml_node.findall(with_tag)
-        else:
-            res = xml_node.findall('*')
-
+        res = _XmlNodeChildrenGetter.get_children(xml_node, with_tag)
         if not res:
             return None
         if len(res) > 1:
