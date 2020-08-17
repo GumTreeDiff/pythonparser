@@ -7,10 +7,16 @@
 import argparse
 import ast
 import json as json
+import logging
 from typing import Dict, List, Union
 from xml.sax.saxutils import quoteattr
 
 import asttokens
+
+from src.main.util.const import LOGGER_NAME
+from src.main.util.log_util import log_and_raise_error
+
+logger = logging.getLogger(LOGGER_NAME)
 
 JsonNodeType = Dict[str, Union[str, List[int]]]
 
@@ -51,8 +57,10 @@ def parse_file(filename: str) -> List[JsonNodeType]:
             json_node['end_line_no'] = str(py_node.end_lineno)
             json_node['end_col'] = str(py_node.end_col_offset)
         else:
-            raise RuntimeError(f'Failed to localize {type(py_node).__name__} node. '
-                               f'Not enough location attributes for localization')
+            log_and_raise_error(f'Failed to localize {type(py_node).__name__} node. '
+                                f'Not enough location attributes for localization',
+                                logger,
+                                RuntimeError)
 
     def gen_identifier(identifier: str, node_type: str = 'identifier', py_node: ast.AST = None) -> int:
         pos = len(json_tree)
@@ -249,4 +257,6 @@ if __name__ == '__main__':
     else:
         xml = json2xml(parsed_json_tree)
         print(xml)
+
+
 
