@@ -56,9 +56,13 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_formatted_value(xml_node: ET.Element, py_node: ast.AST) -> None:
-        xml_node_child = _XmlNodeChildrenGetter.get_unique_child(xml_node)
-        py_node.value = _NodeRestorer.restore(xml_node_child)
+        xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
+        py_node.value = _NodeRestorer.restore(xml_node_children[0])
         py_node.conversion = -1
+        try:
+            py_node.format_spec = _NodeRestorer.restore(xml_node_children[1])
+        except IndexError:
+            py_node.format_spec = None
         ''' 
         Note: conversion=-1 is "no formatting". So it'll be default setting.
         It is possible to include conversion in XML if neccessary
@@ -468,19 +472,20 @@ class _NodeRestorer:
 
         xml_node_vararg = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='vararg')
         if xml_node_vararg is not None:
-            py_node.vararg = ast.arg(arg=xml_node_vararg.attrib['value'])
+            py_node.vararg = ast.arg(arg=xml_node_vararg.attrib['value'], annotation=None)
         else:
             py_node.vararg = None
 
         xml_node_kwarg = _XmlNodeChildrenGetter.get_unique_child(xml_node, with_tag='kwarg')
         if xml_node_kwarg is not None:
-            py_node.kwarg = ast.arg(arg=xml_node_kwarg.attrib['value'])
+            py_node.kwarg = ast.arg(arg=xml_node_kwarg.attrib['value'], annotation=None)
         else:
             py_node.kwarg = None
 
     @staticmethod
     def restore_ast_arg(xml_node: ET.Element, py_node: ast.AST) -> None:
         py_node.arg = xml_node.attrib['value']
+        py_node.annotation = None  # pythonparser_3 does not support type annotation
 
     @staticmethod
     def restore_ast_return(xml_node: ET.Element, py_node: ast.AST) -> None:
