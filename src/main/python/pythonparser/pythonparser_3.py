@@ -34,27 +34,41 @@ def parse_file(filename: str) -> List[JsonNodeType]:
 
     json_tree = []
 
-    def localize(node: ast.AST, json_node: JsonNodeType) -> None:
-        json_node['lineno'] = str(node.first_token.start[0])
-        json_node['col'] = str(node.first_token.start[1])
-        json_node['end_lineno'] = str(node.last_token.end[0])
-        json_node['end_col'] = str(node.last_token.end[1])
+    def localize(py_node: ast.AST, json_node: JsonNodeType) -> None:
+        if py_node is None:
+            return
 
-    def gen_identifier(identifier: str, node_type: str = 'identifier', node: ast.AST = None) -> int:
+        location_attributes = (['first_token', 'last_token'],
+                               ['lineno', 'col_offset', 'end_lineno', 'end_col_offset'])
+        if all(hasattr(py_node, location_attr) for location_attr in location_attributes[0]):
+            json_node['lineno'] = str(py_node.first_token.start[0])
+            json_node['col'] = str(py_node.first_token.start[1])
+            json_node['end_line_no'] = str(py_node.last_token.end[0])
+            json_node['end_col'] = str(py_node.last_token.end[1])
+        elif all(hasattr(py_node, location_attr) for location_attr in location_attributes[1]):
+            json_node['lineno'] = str(py_node.lineno)
+            json_node['col'] = str(py_node.col_offset)
+            json_node['end_line_no'] = str(py_node.end_lineno)
+            json_node['end_col'] = str(py_node.end_col_offset)
+        else:
+            raise RuntimeError(f'Failed to localize {type(py_node).__name__} node. '
+                               f'Not enough location attributes for localization')
+
+    def gen_identifier(identifier: str, node_type: str = 'identifier', py_node: ast.AST = None) -> int:
         pos = len(json_tree)
         json_node = {}
         json_tree.append(json_node)
         json_node['type'] = node_type
         json_node['value'] = identifier
-        localize(node, json_node)
+        localize(py_node, json_node)
         return pos
 
-    def traverse_list(py_ast_nodes: List[ast.AST], node_type: str = 'list', node: ast.AST = None) -> int:
+    def traverse_list(py_ast_nodes: List[ast.AST], node_type: str = 'list', py_node: ast.AST = None) -> int:
         pos = len(json_tree)
         json_node = {}
         json_tree.append(json_node)
         json_node['type'] = node_type
-        localize(node, json_node)
+        localize(py_node, json_node)
         children = []
         for item in py_ast_nodes:
             children.append(traverse(item))
@@ -62,95 +76,120 @@ def parse_file(filename: str) -> List[JsonNodeType]:
             json_node['children'] = children
         return pos
 
-    def traverse(node: ast.AST) -> Union[JsonNodeType, int]:
+    def create_child(py_node_child: ast.AST, node_type: str, py_node: ast.AST = None):
         pos = len(json_tree)
         json_node = {}
         json_tree.append(json_node)
-        json_node['type'] = type(node).__name__
-        localize(node, json_node)
+        json_node['type'] = node_type
+        localize(py_node, json_node)
+        if py_node_child is not None:
+            json_node['children'] = [traverse(py_node_child)]
+        return pos
+
+    def traverse(py_node: ast.AST) -> Union[JsonNodeType, int]:
+        pos = len(json_tree)
+        json_node = {}
+        json_tree.append(json_node)
+        json_node['type'] = type(py_node).__name__
+        localize(py_node, json_node)
         children = []
-        if isinstance(node, ast.Name):
-            json_node['value'] = node.id
-        elif isinstance(node, ast.NameConstant):
-            json_node['value'] = node.value
-        elif isinstance(node, ast.Constant):
-            json_node['value'] = node.value
-        elif isinstance(node, ast.Num):
-            json_node['value'] = node.n
-        elif isinstance(node, ast.Str):
-            json_node['value'] = node.s
-        elif isinstance(node, ast.alias):
-            json_node['value'] = node.name
-            if node.asname:
-                children.append(gen_identifier(node.asname, node=node))
-        elif isinstance(node, ast.FunctionDef):
-            json_node['value'] = node.name
-        elif isinstance(node, ast.ExceptHandler):
-            if node.name:
-                json_node['value'] = node.name
-        elif isinstance(node, ast.ClassDef):
-            json_node['value'] = node.name
-        elif isinstance(node, ast.ImportFrom):
-            if node.module:
-                json_node['value'] = node.module
-        elif isinstance(node, ast.Global):
-            for n in node.names:
-                children.append(gen_identifier(n, node=node))
-        elif isinstance(node, ast.keyword):
-            json_node['value'] = node.arg
-        elif isinstance(node, ast.arg):
-            json_node['value'] = node.arg
+
+        if isinstance(py_node, ast.Name):
+            json_node['value'] = py_node.id
+        elif isinstance(py_node, ast.NameConstant):
+            json_node['value'] = py_node.value
+            json_node['value_type'] = type(py_node.value).__name__
+        elif isinstance(py_node, ast.Constant):
+            json_node['value'] = py_node.value
+            json_node['value_type'] = type(py_node.value).__name__
+        elif isinstance(py_node, ast.Num):
+            json_node['value'] = py_node.n
+            json_node['value_type'] = type(py_node.n).__name__
+        elif isinstance(py_node, ast.Str):
+            json_node['value'] = py_node.s
+        elif isinstance(py_node, ast.alias):
+            json_node['value'] = py_node.name
+            if py_node.asname:
+                children.append(gen_identifier(py_node.asname, py_node=py_node))
+        elif isinstance(py_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            json_node['value'] = py_node.name
+        elif isinstance(py_node, ast.ExceptHandler):
+            if py_node.name:
+                json_node['value'] = py_node.name
+        elif isinstance(py_node, ast.ClassDef):
+            json_node['value'] = py_node.name
+        elif isinstance(py_node, ast.ImportFrom):
+            if py_node.module:
+                json_node['value'] = py_node.module
+            json_node['import_level'] = str(py_node.level)
+
+        elif isinstance(py_node, (ast.Global, ast.Nonlocal)):
+            for n in py_node.names:
+                children.append(gen_identifier(n, py_node=py_node))
+        elif isinstance(py_node, ast.keyword):
+            json_node['value'] = py_node.arg
+            json_node['value_type'] = type(py_node.arg).__name__
+        elif isinstance(py_node, ast.arg):
+            json_node['value'] = py_node.arg
 
         # Process children.
-        if isinstance(node, ast.For):
-            children.append(traverse(node.target))
-            children.append(traverse(node.iter))
-            children.append(traverse_list(node.body, 'body', node))
-            if node.orelse:
-                children.append(traverse_list(node.orelse, 'orelse', node))
-        elif isinstance(node, ast.If) or isinstance(node, ast.While):
-            children.append(traverse(node.test))
-            children.append(traverse_list(node.body, 'body', node))
-            if node.orelse:
-                children.append(traverse_list(node.orelse, 'orelse', node))
-        elif isinstance(node, ast.With):
-            children.append(traverse_list(node.items, 'items', node))
-            children.append(traverse_list(node.body, 'body', node))
-        elif isinstance(node, ast.withitem):
-            children.append(traverse(node.context_expr))
-            if node.optional_vars:
-                children.append(traverse(node.optional_vars))
-        elif isinstance(node, ast.Try):
-            children.append(traverse_list(node.body, 'body', node))
-            children.append(traverse_list(node.handlers, 'handlers', node))
-            if node.orelse:
-                children.append(traverse_list(node.orelse, 'orelse', node))
-            if node.finalbody:
-                children.append(traverse_list(node.finalbody, 'finalbody', node))
-        elif isinstance(node, ast.arguments):
-            children.append(traverse_list(node.args, 'args', node))
-            children.append(traverse_list(node.defaults, 'defaults', node))
-            children.append(traverse_list(node.kwonlyargs, 'defaults', node))
-            children.append(traverse_list(node.kw_defaults, 'defaults', node))
-            if node.vararg:
-                children.append(gen_identifier(node.vararg.arg, 'vararg', node.vararg))
-            if node.kwarg:
-                children.append(gen_identifier(node.kwarg.arg, 'kwarg', node.kwarg))
-        elif isinstance(node, ast.ExceptHandler):
-            if node.type:
-                children.append(traverse_list([node.type], 'type', node))
-            children.append(traverse_list(node.body, 'body', node))
-        elif isinstance(node, ast.ClassDef):
-            children.append(traverse_list(node.bases, 'bases', node))
-            children.append(traverse_list(node.body, 'body', node))
-            children.append(traverse_list(node.decorator_list, 'decorator_list', node))
-        elif isinstance(node, ast.FunctionDef):
-            children.append(traverse(node.args))
-            children.append(traverse_list(node.body, 'body', node))
-            children.append(traverse_list(node.decorator_list, 'decorator_list', node))
-        else:
+        if isinstance(py_node, (ast.For, ast.AsyncFor)):
+            children.append(traverse(py_node.target))
+            children.append(traverse(py_node.iter))
+            children.append(traverse_list(py_node.body, 'body', py_node))
+            if py_node.orelse:
+                children.append(traverse_list(py_node.orelse, 'orelse', py_node))
+        elif isinstance(py_node, ast.If) or isinstance(py_node, ast.While):
+            children.append(traverse(py_node.test))
+            children.append(traverse_list(py_node.body, 'body', py_node))
+            if py_node.orelse:
+                children.append(traverse_list(py_node.orelse, 'orelse', py_node))
+        elif isinstance(py_node, (ast.With, ast.AsyncWith)):
+            children.append(traverse_list(py_node.items, 'items', py_node))
+            children.append(traverse_list(py_node.body, 'body', py_node))
+        elif isinstance(py_node, ast.withitem):
+            children.append(traverse(py_node.context_expr))
+            if py_node.optional_vars:
+                children.append(traverse(py_node.optional_vars))
+        elif isinstance(py_node, ast.Try):
+            children.append(traverse_list(py_node.body, 'body', py_node))
+            children.append(traverse_list(py_node.handlers, 'handlers', py_node))
+            if py_node.orelse:
+                children.append(traverse_list(py_node.orelse, 'orelse', py_node))
+            if py_node.finalbody:
+                children.append(traverse_list(py_node.finalbody, 'finalbody', py_node))
+        elif isinstance(py_node, ast.arguments):
+            children.append(traverse_list(py_node.posonlyargs, 'posonlyargs', py_node))
+            children.append(traverse_list(py_node.args, 'args', py_node))
+            children.append(traverse_list(py_node.kwonlyargs, 'kwonlyargs', py_node))
+            children.append(traverse_list(py_node.kw_defaults, 'kw_defaults', py_node))
+            children.append(traverse_list(py_node.defaults, 'defaults', py_node))
+            if py_node.vararg:
+                children.append(gen_identifier(py_node.vararg.arg, 'vararg', py_node.vararg))
+            if py_node.kwarg:
+                children.append(gen_identifier(py_node.kwarg.arg, 'kwarg', py_node.kwarg))
+        elif isinstance(py_node, ast.ExceptHandler):
+            if py_node.type:
+                children.append(traverse_list([py_node.type], 'type', py_node))
+            children.append(traverse_list(py_node.body, 'body', py_node))
+        elif isinstance(py_node, ast.ClassDef):
+            children.append(traverse_list(py_node.bases, 'bases', py_node))
+            children.append(traverse_list(py_node.keywords, 'keywords', py_node))
+            children.append(traverse_list(py_node.body, 'body', py_node))
+            children.append(traverse_list(py_node.decorator_list, 'decorator_list', py_node))
+        elif isinstance(py_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            children.append(traverse(py_node.args))
+            children.append(traverse_list(py_node.body, 'body', py_node))
+            children.append(traverse_list(py_node.decorator_list, 'decorator_list', py_node))
+
+        elif isinstance(py_node, ast.Slice):
+            children.append(create_child(py_node.lower, 'lower', py_node))
+            children.append(create_child(py_node.step, 'step', py_node))
+            children.append(create_child(py_node.upper, 'upper', py_node))
+
+        elif py_node is not None:
             # Default handling: iterate over children.
-            for child in ast.iter_child_nodes(node):
+            for child in ast.iter_child_nodes(py_node):
                 if isinstance(child, ast.expr_context) or\
                    isinstance(child, ast.operator) or\
                    isinstance(child, ast.boolop) or\
@@ -161,8 +200,8 @@ def parse_file(filename: str) -> List[JsonNodeType]:
                 else:
                     children.append(traverse(child))
 
-        if isinstance(node, ast.Attribute):
-            children.append(gen_identifier(node.attr, 'attr', node))
+        if isinstance(py_node, ast.Attribute):
+            children.append(gen_identifier(py_node.attr, 'attr', py_node))
 
         if len(children) != 0:
             json_node['children'] = children
@@ -183,7 +222,7 @@ def json2xml(tree: List[JsonNodeType]) -> str:
     def convert_node(i: int, indent_level: int = 0) -> List[str]:
         node = tree[i]
         line = '\t' * indent_level + '<{}'.format(node['type'])
-        for key in ['value', 'lineno', 'col', 'end_lineno', 'end_col']:
+        for key in ['value', 'value_type', 'lineno', 'col', 'end_line_no', 'end_col', 'import_level']:
             if key in node:
                 line += (' {}={}'.format(key, quoteattr(str(node[key]))))
         line += '>'
@@ -210,3 +249,6 @@ if __name__ == '__main__':
     else:
         xml = json2xml(parsed_json_tree)
         print(xml)
+
+
+
