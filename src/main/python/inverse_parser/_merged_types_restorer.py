@@ -28,7 +28,7 @@ class _MergedTypesRestorer:
         :return merged_types: other types merged in tag: context or operators
         """
         types = xml_node.tag.split('_')
-        py_node_type_name, merged_types_names = types[0], types[1:]
+        py_node_type_name, merged_types_names = types[0].split('-')[0], types[1:]
         if py_node_type_name == 'NoneType':
             py_node_type = type(None)
         else:
