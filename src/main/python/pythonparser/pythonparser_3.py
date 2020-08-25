@@ -116,7 +116,7 @@ def parse_file(filename: str) -> List[JsonNodeType]:
 
         elif isinstance(py_node, ast.Num):
             json_node['value'] = py_node.n
-            json_node['type'] += '-' + type(py_node.value).__name__
+            json_node['type'] += '-' + type(py_node.n).__name__
 
         elif isinstance(py_node, ast.Str):
             json_node['value'] = py_node.s
