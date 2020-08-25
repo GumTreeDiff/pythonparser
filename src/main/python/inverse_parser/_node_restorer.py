@@ -47,11 +47,11 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_constant(xml_node: ET.Element, py_node: ast.AST) -> None:
-        _AttributeSetter.set_const_value(xml_node, py_node, py_node_attrib_name='value')
+        _AttributeSetter.set_const_attrib(xml_node, py_node, py_node_attrib_name='value')
 
     @staticmethod
     def restore_ast_num(xml_node: ET.Element, py_node: ast.AST) -> None:
-        _AttributeSetter.set_const_value(xml_node, py_node, py_node_attrib_name='n')
+        _AttributeSetter.set_const_attrib(xml_node, py_node, py_node_attrib_name='n')
 
     @staticmethod
     def restore_ast_str(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -59,7 +59,7 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_bytes(xml_node: ET.Element, py_node: ast.AST) -> None:  # Deprecated in Python 3.8 +
-        _AttributeSetter.set_const_value(xml_node, py_node, py_node_attrib_name='s')
+        _AttributeSetter.set_const_attrib(xml_node, py_node, py_node_attrib_name='s')
 
     @staticmethod
     def restore_ast_formatted_value(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -104,11 +104,11 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_ellipsis(xml_node: ET.Element, py_node: ast.AST) -> None:
-        _AttributeSetter.set_const_value(xml_node, py_node, py_node_attrib_name='value')
+        _AttributeSetter.set_const_attrib(xml_node, py_node, py_node_attrib_name='value')
 
     @staticmethod
     def restore_ast_name_constant(xml_node: ET.Element, py_node: ast.AST) -> None:
-        _AttributeSetter.set_const_value(xml_node, py_node, py_node_attrib_name='value')
+        _AttributeSetter.set_const_attrib(xml_node, py_node, py_node_attrib_name='value')
 
     # - Variables:
 
@@ -177,7 +177,7 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_keyword(xml_node: ET.Element, py_node: ast.AST) -> None:
-        _AttributeSetter.set_const_value(xml_node, py_node, py_node_attrib_name='arg')
+        _AttributeSetter.set_const_attrib(xml_node, py_node, py_node_attrib_name='arg')
         py_node.value = _NodeRestorer.restore(_XmlNodeChildrenGetter.get_unique_child(xml_node))
 
     @staticmethod
