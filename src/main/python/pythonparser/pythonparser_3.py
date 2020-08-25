@@ -251,7 +251,7 @@ def json2xml(tree: List[JsonNodeType]) -> str:
     def convert_node(i: int, indent_level: int = 0) -> List[str]:
         node = tree[i]
         line = '\t' * indent_level + '<{}'.format(node['type'])
-        for key in ['value', 'value_type', 'lineno', 'col', 'end_line_no', 'end_col', 'import_level']:
+        for key in ['value', 'lineno', 'col', 'end_line_no', 'end_col']:
             if key in node:
                 line += (' {}={}'.format(key, quoteattr(str(node[key]))))
         line += '>'
