@@ -15,15 +15,6 @@ We are going to support Python 3.8 in **python3** parser:
 [Here](https://docs.python.org/3/whatsnew/3.8.html) you can read about all new features that Python 3.8 provides.
 
 
-## Table of Contents:
-- [Installation](#installation)
-- [Run parser](#run-parser)
-- [Examples](#examples)
-- [Tree format](#tree-format)
-
-***
-
-
 ### Installation
 - python2:  
     `pip install -r requirements.txt`
