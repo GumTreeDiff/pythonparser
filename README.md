@@ -15,14 +15,16 @@ We are going to support Python 3.8 in **python3** parser:
 [Here](https://docs.python.org/3/whatsnew/3.8.html) you can read about all new features that Python 3.8 provides.
 
 
-### Table of Contents:
+## Table of Contents:
 - [Installation](#installation)
 - [Run parser](#run-parser)
 - [Examples](#examples)
 - [Tree format](#tree-format)
 
+***
 
-## Installation
+
+### Installation
 - python2:  
     `pip install -r requirements.txt`
   
@@ -31,16 +33,18 @@ We are going to support Python 3.8 in **python3** parser:
 - python3 tests:
     `pip3 install -r requirements-test.txt` 
 
-## Run parser
+### Run parser
 - python2:  
     `python pythonparser_2 path_to_src_file.py`
   
 - python3:  
     `python3 pythonparser_3 path_to_src_file.py`
-## Run tests for pythonparser_3  
+
+To run tests for pythonparser_3:
+
 `python3 -m pytest`
 
-## Examples
+### Examples
 
 This section describes several examples of `pythonparser3` work.
 
@@ -189,6 +193,6 @@ class Example(NodeVisitor):
 
 </details>
 
-## Tree format
+### Tree format
 
-### TODO: - add some info about tree format
+#### TODO: - add some info about tree format
