@@ -11,7 +11,7 @@ import astor
 
 from src.main.python.inverse_parser._node_restorer import _NodeRestorer
 from src.main.util.const import LOGGER_NAME
-from src.main.util.file_util import get_content_from_file
+from src.main.util.file_util import get_content_from_file, create_file
 from src.main.util.log_util import log_and_raise_error
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -85,8 +85,7 @@ if __name__ == '__main__':
     gen_src = inverse_parser.get_source()
 
     if args.output_file is not None:
-        with open(args.output_file, 'w') as out_f:
-            out_f.write(gen_src)
+        create_file(gen_src, args.output_file)
 
     else:
         print(gen_src)
