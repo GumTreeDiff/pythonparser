@@ -182,6 +182,52 @@ class Example(NodeVisitor):
 
 </details>
 
-## Tree format
+### Tree format
 
-### TODO: - add some info about tree format
+This section describes format of tree, that pythonparser-3 produces.  
+
+Produced tree is a valid XML document. Each node in the document corresponds to a node
+of Python AST.
+Since the second version of the GumTree library takes into account only tag of the node, 
+`value` attribute, token position attributes and nothing more, we have to include 
+additional information about some nodes into their tags.
+So, it is necessary to note several nuances of the format:  
+1. Operations are directly included into node tag. They follow the `underscore` character.
+
+    <details><summary>Example</summary>
+
+    Node with `BinOp_Add` tag is `BinOp` (binary operation) node
+    and operation of that node is addition.
+
+    </details>
+2. [Expression context](https://greentreesnakes.readthedocs.io/en/latest/nodes.html#Load) 
+is directly included into node tag. It follows the `underscore` character.
+ 
+    <details><summary>Example</summary>
+
+    Node with `Name_Load` tag is `Name` node
+    and the context of that `Name` is `Load`, which means that we "load" or "read" the
+    content holden by `Name` node
+    
+    </details>
+3. Type of value contained in constant node (`Constant`, `Num`, `Str`) directly included into node tag.
+   It follows the `hyphen` character. 
+ 
+   <details><summary>Example</summary>
+
+   Node with `Constant-float` tag is `Constant` node
+   and the value contained in it has the `float` type.
+    
+   </details>
+
+4. [Import level](https://greentreesnakes.readthedocs.io/en/latest/nodes.html#ImportFrom) is directly included 
+into `ImportFrom` node tag. It follows the `hyphen` character. 
+   <details><summary>Example</summary>
+
+   Node with `ImportFrom-3` tag is `ImportFrom` node
+   and import level is 3.
+    
+   </details>
+  
+*Note*: Token position attributes are: `lineno`, `col`, `end_line_no`, `end_col`.  
+ They exist in order to determine the position of the token.
