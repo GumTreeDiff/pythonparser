@@ -1,5 +1,8 @@
+#!/usr/bin/env python3
+
 # Copyright (c) Aniskov N.
 
+import argparse
 import ast
 import logging
 import xml.etree.ElementTree as ET
@@ -8,7 +11,7 @@ import astor
 
 from src.main.python.inverse_parser._node_restorer import _NodeRestorer
 from src.main.util.const import LOGGER_NAME
-from src.main.util.file_util import get_content_from_file
+from src.main.util.file_util import get_content_from_file, create_file
 from src.main.util.log_util import log_and_raise_error
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -66,3 +69,23 @@ class InverseParser:
     def __init_xml_ast(self, filename: str) -> None:
         xml_str = get_content_from_file(filename, to_strip_nl=False)
         self.xml_ast_ = ET.fromstring(xml_str)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Parse AST of python3 code in XML format to source code')
+    parser.add_argument('filename', type=str, help='XML file with AST')
+    parser.add_argument('-o', '--output_file',
+                        help='The name of the file '
+                             'where the generated code will be written'
+                        )
+
+    args = parser.parse_args()
+
+    inverse_parser = InverseParser(args.filename)
+    gen_src = inverse_parser.get_source()
+
+    if args.output_file is not None:
+        create_file(gen_src, args.output_file)
+
+    else:
+        print(gen_src)
