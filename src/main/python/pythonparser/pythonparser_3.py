@@ -27,7 +27,16 @@ def read_file_to_string(filename: str) -> str:
 
 def parse_file(filename: str) -> List[JsonNodeType]:
     """
+    Produces XML in special for GumTree 2.x library
+     format -- merge value_type and import_level into node type
+     (Example: <Constant value="5" value_type="int"> in standard format will become
+               <Constant-int value="5"> in that format)
+
     :param filename: file with python3 code to be parsed
+    XML in special for GumTree 2.x library
+     format -- merge value_type and import_level into node type
+     (Example: <Constant value="5" value_type="int"> in standard format will become
+               <Constant-int value="5"> in that format)
     :return: tree in json format
     """
     tree = asttokens.ASTTokens(read_file_to_string(filename), parse=True).tree
@@ -96,39 +105,50 @@ def parse_file(filename: str) -> List[JsonNodeType]:
 
         if isinstance(py_node, ast.Name):
             json_node['value'] = py_node.id
+
         elif isinstance(py_node, ast.NameConstant):
             json_node['value'] = py_node.value
-            json_node['value_type'] = type(py_node.value).__name__
+            json_node['type'] += '-' + type(py_node.value).__name__
+
         elif isinstance(py_node, ast.Constant):
             json_node['value'] = py_node.value
-            json_node['value_type'] = type(py_node.value).__name__
+            json_node['type'] += '-' + type(py_node.value).__name__
+
         elif isinstance(py_node, ast.Num):
             json_node['value'] = py_node.n
-            json_node['value_type'] = type(py_node.n).__name__
+            json_node['type'] += '-' + type(py_node.n).__name__
+
         elif isinstance(py_node, ast.Str):
             json_node['value'] = py_node.s
+
         elif isinstance(py_node, ast.alias):
             json_node['value'] = py_node.name
             if py_node.asname:
                 children.append(gen_identifier(py_node.asname, py_node=py_node))
+
         elif isinstance(py_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             json_node['value'] = py_node.name
+
         elif isinstance(py_node, ast.ExceptHandler):
             if py_node.name:
                 json_node['value'] = py_node.name
+
         elif isinstance(py_node, ast.ClassDef):
             json_node['value'] = py_node.name
+
         elif isinstance(py_node, ast.ImportFrom):
             if py_node.module:
                 json_node['value'] = py_node.module
-            json_node['import_level'] = str(py_node.level)
+                json_node['type'] += '-' + str(py_node.level)
 
         elif isinstance(py_node, (ast.Global, ast.Nonlocal)):
             for n in py_node.names:
                 children.append(gen_identifier(n, py_node=py_node))
+
         elif isinstance(py_node, ast.keyword):
             json_node['value'] = py_node.arg
-            json_node['value_type'] = type(py_node.arg).__name__
+            json_node['type'] += '-' + type(py_node.arg).__name__
+
         elif isinstance(py_node, ast.arg):
             json_node['value'] = py_node.arg
 
@@ -139,18 +159,22 @@ def parse_file(filename: str) -> List[JsonNodeType]:
             children.append(traverse_list(py_node.body, 'body', py_node))
             if py_node.orelse:
                 children.append(traverse_list(py_node.orelse, 'orelse', py_node))
+
         elif isinstance(py_node, ast.If) or isinstance(py_node, ast.While):
             children.append(traverse(py_node.test))
             children.append(traverse_list(py_node.body, 'body', py_node))
             if py_node.orelse:
                 children.append(traverse_list(py_node.orelse, 'orelse', py_node))
+
         elif isinstance(py_node, (ast.With, ast.AsyncWith)):
             children.append(traverse_list(py_node.items, 'items', py_node))
             children.append(traverse_list(py_node.body, 'body', py_node))
+
         elif isinstance(py_node, ast.withitem):
             children.append(traverse(py_node.context_expr))
             if py_node.optional_vars:
                 children.append(traverse(py_node.optional_vars))
+
         elif isinstance(py_node, ast.Try):
             children.append(traverse_list(py_node.body, 'body', py_node))
             children.append(traverse_list(py_node.handlers, 'handlers', py_node))
@@ -158,6 +182,7 @@ def parse_file(filename: str) -> List[JsonNodeType]:
                 children.append(traverse_list(py_node.orelse, 'orelse', py_node))
             if py_node.finalbody:
                 children.append(traverse_list(py_node.finalbody, 'finalbody', py_node))
+
         elif isinstance(py_node, ast.arguments):
             children.append(traverse_list(py_node.posonlyargs, 'posonlyargs', py_node))
             children.append(traverse_list(py_node.args, 'args', py_node))
@@ -168,15 +193,18 @@ def parse_file(filename: str) -> List[JsonNodeType]:
                 children.append(gen_identifier(py_node.vararg.arg, 'vararg', py_node.vararg))
             if py_node.kwarg:
                 children.append(gen_identifier(py_node.kwarg.arg, 'kwarg', py_node.kwarg))
+
         elif isinstance(py_node, ast.ExceptHandler):
             if py_node.type:
                 children.append(traverse_list([py_node.type], 'type', py_node))
             children.append(traverse_list(py_node.body, 'body', py_node))
+
         elif isinstance(py_node, ast.ClassDef):
             children.append(traverse_list(py_node.bases, 'bases', py_node))
             children.append(traverse_list(py_node.keywords, 'keywords', py_node))
             children.append(traverse_list(py_node.body, 'body', py_node))
             children.append(traverse_list(py_node.decorator_list, 'decorator_list', py_node))
+
         elif isinstance(py_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             children.append(traverse(py_node.args))
             children.append(traverse_list(py_node.body, 'body', py_node))
@@ -205,6 +233,7 @@ def parse_file(filename: str) -> List[JsonNodeType]:
 
         if len(children) != 0:
             json_node['children'] = children
+
         return pos
 
     traverse(tree)
@@ -222,7 +251,7 @@ def json2xml(tree: List[JsonNodeType]) -> str:
     def convert_node(i: int, indent_level: int = 0) -> List[str]:
         node = tree[i]
         line = '\t' * indent_level + '<{}'.format(node['type'])
-        for key in ['value', 'value_type', 'lineno', 'col', 'end_line_no', 'end_col', 'import_level']:
+        for key in ['value', 'lineno', 'col', 'end_line_no', 'end_col']:
             if key in node:
                 line += (' {}={}'.format(key, quoteattr(str(node[key]))))
         line += '>'
@@ -242,6 +271,7 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--format', choices=['xml', 'json'], help='Print format', default='xml')
 
     args = parser.parse_args()
+
     parsed_json_tree = parse_file(args.filename)
 
     if args.format == 'json':

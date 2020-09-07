@@ -3,9 +3,7 @@
 [![elena-lyulina](https://circleci.com/gh/elena-lyulina/pythonparser/tree/master.svg?style=shield)](https://app.circleci.com/pipelines/github/elena-lyulina/pythonparser?branch=master)
 
 This repository contains parsers from **python code** to **xml/json** and vice versa.
-There are parsers for **python2** (see [pythonparser](src/main/python/pythonparser-2.py), source code from 
-[GumTreeDiff pythonparser](https://github.com/GumTreeDiff/pythonparser) repository) and 
-**python3** (see [pythonparser3](src/main/python/pythonparser-3.py), source code from [pythonparser](https://github.com/Varal7/pythonparser) repository  and [150k Python Dataset](https://eth-sri.github.io/py150) project). 
+There are parsers for **python2** (see [pythonparser](src/main/python/pythonparser-2.py), source code from [this](https://github.com/GumTreeDiff/pythonparser) repository) and **python3** (see [pythonparser3](src/main/python/pythonparser-3.py), source code from [this](https://github.com/Varal7/pythonparser) repository  and [this](https://eth-sri.github.io/py150) project). 
 
 We are going to support Python 3.8 in **python3** parser:
 - [ ] [the "walrus" operator](https://docs.python.org/3/whatsnew/3.8.html#assignment-expressions);
@@ -15,7 +13,7 @@ We are going to support Python 3.8 in **python3** parser:
 [Here](https://docs.python.org/3/whatsnew/3.8.html) you can read about all new features that Python 3.8 provides.
 
 
-### Installation
+## Installation
 - python2:  
     `pip install -r requirements.txt`
   
@@ -24,7 +22,7 @@ We are going to support Python 3.8 in **python3** parser:
 - python3 tests:
     `pip3 install -r requirements-test.txt` 
 
-### Run parser
+## Run parser
 - python2:  
     `python pythonparser_2 path_to_src_file.py`
   
@@ -35,7 +33,8 @@ To run tests for pythonparser_3:
 
 `python3 -m pytest`
 
-### Examples
+
+## Examples
 
 This section describes several examples of `pythonparser3` work.
 
@@ -58,14 +57,14 @@ print(a + b)
 	<Assign lineno="1" col="0" end_line_no="1" end_col="5">
 		<Name_Store value="a" lineno="1" col="0" end_line_no="1" end_col="1">
 		</Name_Store>
-		<Constant value="5" value_type="int" lineno="1" col="4" end_line_no="1" end_col="5">
-		</Constant>
+		<Constant-int value="5" lineno="1" col="4" end_line_no="1" end_col="5">
+		</Constant-int>
 	</Assign>
 	<Assign lineno="2" col="0" end_line_no="2" end_col="8">
 		<Name_Store value="b" lineno="2" col="0" end_line_no="2" end_col="1">
 		</Name_Store>
-		<Constant value="16.5" value_type="float" lineno="2" col="4" end_line_no="2" end_col="8">
-		</Constant>
+		<Constant-float value="16.5" lineno="2" col="4" end_line_no="2" end_col="8">
+		</Constant-float>
 	</Assign>
 	<Expr lineno="3" col="0" end_line_no="3" end_col="12">
 		<Call lineno="3" col="0" end_line_no="3" end_col="12">
@@ -86,12 +85,11 @@ print(a + b)
 
 </details>
 
-
 <details><summary>Second example</summary>
 
 <p>
 
-``` python 
+``` python
 # Test example
 
 from ast import NodeVisitor
@@ -107,12 +105,12 @@ class Example(NodeVisitor):
 
 <p>
 
-``` xml 
+``` xml
 <Module lineno="1" col="0" end_line_no="9" end_col="45">
-	<ImportFrom value="ast" lineno="3" col="0" end_line_no="3" end_col="27" import_level="0">
+	<ImportFrom-0 value="ast" lineno="3" col="0" end_line_no="3" end_col="27">
 		<alias value="NodeVisitor" lineno="3" col="0" end_line_no="3" end_col="4">
 		</alias>
-	</ImportFrom>
+	</ImportFrom-0>
 	<ClassDef value="Example" lineno="6" col="0" end_line_no="9" end_col="45">
 		<bases lineno="6" col="0" end_line_no="9" end_col="45">
 			<Name_Load value="NodeVisitor" lineno="6" col="14" end_line_no="6" end_col="25">
@@ -189,17 +187,17 @@ class Example(NodeVisitor):
 This section describes format of tree, that pythonparser-3 produces.  
 
 Produced tree is a valid XML document. Each node in the document corresponds to a node
-of Python AST. It is necessary to note several nuances of the format:  
+of Python AST.
+Since the second version of the GumTree library takes into account only tag of the node, 
+`value` attribute, token position attributes and nothing more, we have to include 
+additional information about some nodes into their tags.
+So, it is necessary to note several nuances of the format:  
 1. Operations are directly included into node tag. They follow the `underscore` character.
 
     <details><summary>Example</summary>
-	
-    <p>
 
     Node with `BinOp_Add` tag is `BinOp` (binary operation) node
     and operation of that node is addition.
-    
-    </p>
 
     </details>
 2. [Expression context](https://greentreesnakes.readthedocs.io/en/latest/nodes.html#Load) 
@@ -216,9 +214,32 @@ is directly included into node tag. It follows the `underscore` character.
     </p>
     
     </details>
-3. Attributes `lineno`, `col`, `end_line_no`, `end_col` exist in order to determine the position of the token.
-4. Nodes that represent constants (`Constant`, `Num`, `Str`) have 
-attribute `value_type`, which stores the type of the constant.
-5. `ImportFrom` node has attribute `import_level`, which stores integer,
- [level of import](https://greentreesnakes.readthedocs.io/en/latest/nodes.html#ImportFrom).
+3. Type of value contained in constant node (`Constant`, `Num`, `Str`) directly included into node tag.
+   It follows the `hyphen` character. 
  
+   <details><summary>Example</summary>
+	
+   <p>
+
+   Node with `Constant-float` tag is `Constant` node
+   and the value contained in it has the `float` type.
+   
+   </p>
+    
+   </details>
+
+4. [Import level](https://greentreesnakes.readthedocs.io/en/latest/nodes.html#ImportFrom) is directly included 
+into `ImportFrom` node tag. It follows the `hyphen` character. 
+   <details><summary>Example</summary>
+	
+   <p>
+
+   Node with `ImportFrom-3` tag is `ImportFrom` node
+   and import level is 3.
+   
+   </p>
+    
+   </details>
+  
+*Note*: Token position attributes are: `lineno`, `col`, `end_line_no`, `end_col`.  
+ They exist in order to determine the position of the token.

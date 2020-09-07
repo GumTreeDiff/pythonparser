@@ -16,14 +16,16 @@ logger = logging.getLogger(LOGGER_NAME)
 class _AttributeSetter:
 
     @staticmethod
-    def set_const_value(xml_node: ET.Element, py_node: ast.AST, py_node_attrib_name: str) -> None:
-        if 'value_type' not in xml_node.attrib:
-            log_and_raise_error(f'missing value_type attribute in {xml_node.tag} node',
+    def set_const_attrib(xml_node: ET.Element, py_node: ast.AST, py_node_attrib_name: str) -> None:
+        try:
+            str_val_type_repr = xml_node.tag.split('-')[1]
+
+        except IndexError:
+            log_and_raise_error(f'missing value_type merged in tag of {xml_node.tag} node',
                                 logger,
                                 RuntimeError)
-        str_val_repr = xml_node.attrib['value']
-        str_val_type_repr = xml_node.attrib['value_type']
 
+        str_val_repr = xml_node.attrib['value']
         value_type = locate(str_val_type_repr)
 
         if str_val_type_repr == 'ellipsis':

@@ -47,11 +47,11 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_constant(xml_node: ET.Element, py_node: ast.AST) -> None:
-        _AttributeSetter.set_const_value(xml_node, py_node, py_node_attrib_name='value')
+        _AttributeSetter.set_const_attrib(xml_node, py_node, py_node_attrib_name='value')
 
     @staticmethod
     def restore_ast_num(xml_node: ET.Element, py_node: ast.AST) -> None:
-        _AttributeSetter.set_const_value(xml_node, py_node, py_node_attrib_name='n')
+        _AttributeSetter.set_const_attrib(xml_node, py_node, py_node_attrib_name='n')
 
     @staticmethod
     def restore_ast_str(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -59,7 +59,7 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_bytes(xml_node: ET.Element, py_node: ast.AST) -> None:  # Deprecated in Python 3.8 +
-        _AttributeSetter.set_const_value(xml_node, py_node, py_node_attrib_name='s')
+        _AttributeSetter.set_const_attrib(xml_node, py_node, py_node_attrib_name='s')
 
     @staticmethod
     def restore_ast_formatted_value(xml_node: ET.Element, py_node: ast.AST) -> None:
@@ -104,11 +104,11 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_ellipsis(xml_node: ET.Element, py_node: ast.AST) -> None:
-        _AttributeSetter.set_const_value(xml_node, py_node, py_node_attrib_name='value')
+        _AttributeSetter.set_const_attrib(xml_node, py_node, py_node_attrib_name='value')
 
     @staticmethod
     def restore_ast_name_constant(xml_node: ET.Element, py_node: ast.AST) -> None:
-        _AttributeSetter.set_const_value(xml_node, py_node, py_node_attrib_name='value')
+        _AttributeSetter.set_const_attrib(xml_node, py_node, py_node_attrib_name='value')
 
     # - Variables:
 
@@ -166,7 +166,7 @@ class _NodeRestorer:
 
         try:
             args_kwargs_idx_delimiter = next(filter(
-                lambda enumerated_node: enumerated_node[1].tag == 'keyword',
+                lambda enumerated_node: enumerated_node[1].tag.startswith('keyword'),
                 enumerate(xml_node_children)))[0]
         except StopIteration:
             args_kwargs_idx_delimiter = len(xml_node_children)
@@ -177,7 +177,7 @@ class _NodeRestorer:
 
     @staticmethod
     def restore_ast_keyword(xml_node: ET.Element, py_node: ast.AST) -> None:
-        _AttributeSetter.set_const_value(xml_node, py_node, py_node_attrib_name='arg')
+        _AttributeSetter.set_const_attrib(xml_node, py_node, py_node_attrib_name='arg')
         py_node.value = _NodeRestorer.restore(_XmlNodeChildrenGetter.get_unique_child(xml_node))
 
     @staticmethod
@@ -336,7 +336,7 @@ class _NodeRestorer:
     @staticmethod
     def restore_ast_import_from(xml_node: ET.Element, py_node: ast.AST) -> None:
         py_node.module = xml_node.attrib['value'] if 'value' in xml_node.attrib else None
-        py_node.level = int(xml_node.attrib['import_level'])
+        py_node.level = int(xml_node.tag.split('-')[1])
         xml_node_children = _XmlNodeChildrenGetter.get_children(xml_node)
         py_node.names = _NodeRestorer.restore_many(xml_node_children)
 
@@ -585,10 +585,13 @@ class _NodeRestorer:
 
     @staticmethod
     def localize_node(xml_node: ET.Element, py_node: ast.AST) -> None:
-        py_node.col_offset = int(xml_node.attrib['col'])
-        py_node.end_col_offset = int(xml_node.attrib['end_col'])
-        py_node.lineno = int(xml_node.attrib['lineno'])
-        py_node.end_lineno = int(xml_node.attrib['end_line_no'])
+        try:
+            py_node.col_offset = int(xml_node.attrib['col'])
+            py_node.end_col_offset = int(xml_node.attrib['end_col'])
+            py_node.lineno = int(xml_node.attrib['lineno'])
+            py_node.end_lineno = int(xml_node.attrib['end_line_no'])
+        except KeyError:
+            pass  # code generation can work without information about the positions of the tokens
 
     @staticmethod
     def restore_many(xml_node_list: List[ET.Element]) -> List[ast.AST]:
