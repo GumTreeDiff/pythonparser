@@ -204,28 +204,40 @@ So, it is necessary to note several nuances of the format:
 is directly included into node tag. It follows the `underscore` character.
  
     <details><summary>Example</summary>
+    
+    <p>
 
     Node with `Name_Load` tag is `Name` node
     and the context of that `Name` is `Load`, which means that we "load" or "read" the
     content holden by `Name` node
+    
+    </p>
     
     </details>
 3. Type of value contained in constant node (`Constant`, `Num`, `Str`) directly included into node tag.
    It follows the `hyphen` character. 
  
    <details><summary>Example</summary>
+	
+   <p>
 
    Node with `Constant-float` tag is `Constant` node
    and the value contained in it has the `float` type.
+   
+   </p>
     
    </details>
 
 4. [Import level](https://greentreesnakes.readthedocs.io/en/latest/nodes.html#ImportFrom) is directly included 
 into `ImportFrom` node tag. It follows the `hyphen` character. 
    <details><summary>Example</summary>
+	
+   <p>
 
    Node with `ImportFrom-3` tag is `ImportFrom` node
    and import level is 3.
+   
+   </p>
     
    </details>
   
