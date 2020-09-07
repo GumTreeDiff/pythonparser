@@ -193,19 +193,27 @@ of Python AST. It is necessary to note several nuances of the format:
 1. Operations are directly included into node tag. They follow the `underscore` character.
 
     <details><summary>Example</summary>
+	
+    <p>
 
     Node with `BinOp_Add` tag is `BinOp` (binary operation) node
     and operation of that node is addition.
+    
+    </p>
 
     </details>
 2. [Expression context](https://greentreesnakes.readthedocs.io/en/latest/nodes.html#Load) 
 is directly included into node tag. It follows the `underscore` character.
  
     <details><summary>Example</summary>
+    
+    <p>
 
     Node with `Name_Load` tag is `Name` node
     and the context of that `Name` is `Load`, which means that we "load" or "read" the
     content holden by `Name` node
+    
+    </p>
     
     </details>
 3. Attributes `lineno`, `col`, `end_line_no`, `end_col` exist in order to determine the position of the token.
