@@ -2,8 +2,8 @@
 
 [![elena-lyulina](https://circleci.com/gh/elena-lyulina/pythonparser/tree/master.svg?style=shield)](https://app.circleci.com/pipelines/github/elena-lyulina/pythonparser?branch=master)
 
-This repository contains parsers from **python code** to **xml/json** and vice versa.
-There are parsers for **python2** (see [pythonparser](src/main/python/pythonparser-2.py), source code from [this](https://github.com/GumTreeDiff/pythonparser) repository) and **python3** (see [pythonparser3](src/main/python/pythonparser-3.py), source code from [this](https://github.com/Varal7/pythonparser) repository  and [this](https://eth-sri.github.io/py150) project). 
+This repository contains parsers from **Python code** to **xml/json** and vice versa.
+This includes parsers for **python2** (see [pythonparser](src/main/python/pythonparser-2.py), source code from [this](https://github.com/GumTreeDiff/pythonparser) repository) and **python3** (see [pythonparser3](src/main/python/pythonparser-3.py), source code from [this](https://github.com/Varal7/pythonparser) repository  and [this](https://eth-sri.github.io/py150) project). 
 
 We are going to support Python 3.8 in **python3** parser:
 - [ ] [the "walrus" operator](https://docs.python.org/3/whatsnew/3.8.html#assignment-expressions);
@@ -22,21 +22,21 @@ We are going to support Python 3.8 in **python3** parser:
 - python3 tests:
     `pip3 install -r requirements-test.txt` 
 
-## Run parser
+## Getting started
 - python2:  
     `python pythonparser_2 path_to_src_file.py`
   
 - python3:  
     `python3 pythonparser_3 path_to_src_file.py`
 
-To run tests for pythonparser_3:
+To run tests for **python3** parser:
 
 `python3 -m pytest`
 
 
-## Examples
+## Examples of usage
 
-This section describes several examples of `pythonparser3` work.
+Here are several examples of using **python3** parser.
 
 <details><summary>First example</summary>
 
@@ -184,44 +184,44 @@ class Example(NodeVisitor):
 
 ### Tree format
 
-This section describes format of tree, that pythonparser-3 produces.  
+This section describes the format of the tree that **python3** parser produces.  
 
-Produced tree is a valid XML document. Each node in the document corresponds to a node
-of Python AST.
-Since the second version of the GumTree library takes into account only tag of the node, 
-`value` attribute, token position attributes and nothing more, we have to include 
-additional information about some nodes into their tags.
+The produced tree is a valid XML document. Each node in the document corresponds to a node
+of Python Abstract syntax tree (AST).
+Since the second version of the [GumTree](https://github.com/GumTreeDiff/gumtree) library takes into account only the label of the node, 
+the `value` attribute, the token position attributes, and nothing else, we have to include 
+additional information about some nodes into their labels.
 So, it is necessary to note several nuances of the format:  
-1. Operations are directly included into node tag. They follow the `underscore` character.
+1. Operations are directly included into the label of the node. They follow `the underscore`.
 
     <details><summary>Example</summary>
 
-    Node with `BinOp_Add` tag is `BinOp` (binary operation) node
-    and operation of that node is addition.
+    A node with the `BinOp_Add` label is a `BinOp` (binary operation) node
+    and the operation of that node is addition.
 
     </details>
 2. [Expression context](https://greentreesnakes.readthedocs.io/en/latest/nodes.html#Load) 
-is directly included into node tag. It follows the `underscore` character.
+is directly included into the label of the nod. It follows `the underscore`.
  
     <details><summary>Example</summary>
     
     <p>
 
-    Node with `Name_Load` tag is `Name` node
+    A node with the `Name_Load` label is a `Name` node
     and the context of that `Name` is `Load`, which means that we "load" or "read" the
-    content holden by `Name` node
+    content held by the `Name` node
     
     </p>
     
     </details>
-3. Type of value contained in constant node (`Constant`, `Num`, `Str`) directly included into node tag.
-   It follows the `hyphen` character. 
+3. The type of the value contained in the constant node (`Constant`, `Num`, `Str`) is directly included into the label of the node.
+   It follows `the hyphen`. 
  
    <details><summary>Example</summary>
 	
    <p>
 
-   Node with `Constant-float` tag is `Constant` node
+   A node with the `Constant-float` label is the `Constant` node
    and the value contained in it has the `float` type.
    
    </p>
@@ -229,41 +229,39 @@ is directly included into node tag. It follows the `underscore` character.
    </details>
 
 4. [Import level](https://greentreesnakes.readthedocs.io/en/latest/nodes.html#ImportFrom) is directly included 
-into `ImportFrom` node tag. It follows the `hyphen` character. 
+into the `ImportFrom` node label. It follows `the hyphen`. 
    <details><summary>Example</summary>
 	
    <p>
 
-   Node with `ImportFrom-3` tag is `ImportFrom` node
-   and import level is 3.
+   A node with the `ImportFrom-3` label is an `ImportFrom` node
+   and the import level is 3.
    
    </p>
     
    </details>
   
-*Note*: Token position attributes are: `lineno`, `col`, `end_line_no`, `end_col`.  
- They exist in order to determine the position of the token.
+*Note*: Token position attributes are: `lineno`, `col`, `end_line_no`, `end_col`. They exist in order to determine the position of the token.
 
 ### How to run Gumtree with Python parser
 
-This is a guide on how to use gumtree with python parser.
-he whole Gumtree project is in [this repository](https://github.com/GumTreeDiff/gumtree).
+This is a guide on how to use [GumTree](https://github.com/GumTreeDiff/gumtree) with Pythonparser.
 
-1. Download Gumtree project
+1. Download GumTree
 
    <details><summary>More details</summary>
 	
    <p>
 
-   The stable version of this project is located [here](https://github.com/GumTreeDiff/gumtree/releases/tag/v2.1.2). 
-   It is `v2.1.2` version, you should download source code. Do not 
+   The stable version of GumTree can be found [here](https://github.com/GumTreeDiff/gumtree/releases/tag/v2.1.2). 
+   The version is `2.1.2`, you should download the source code. Do not 
    clone the repository, because it will give you an unstable version.
    
    </p>
     
    </details>
    
-2. Build Gumtree project
+2. Build GumTree
 
    <details><summary>More details</summary>
 	
@@ -272,16 +270,16 @@ he whole Gumtree project is in [this repository](https://github.com/GumTreeDiff/
    After you downloaded and extracted the archive, open it as a new IDEA project. While you are in the root, 
    open the IDEA terminal (console), and build this project by 
    running `./gradlew build -x test` for UNIX systems and `gradlew.bat build -x test` on Windows 
-   (it can have some troubles with Windows, see an issue [here](https://github.com/GumTreeDiff/gumtree/issues/72)).
+   (it can have some troubles with Windows, see [this issue](https://github.com/GumTreeDiff/gumtree/issues/72)).
    
    </p>
    
    <p>
 
-   To check if this step is done - in the `/dist` directory new folder `build` should appear. 
-   To get the runnable bash-script you should extract the archive `gumtree-2.1.2.zip` in the 
+   To check if this step is done — new folder `build` should appear in the `/dist` directory. 
+   To get the runnable bash-script you should extract the archive `gumtree-2.1.2.zip` in  
    `build/distributions/`. Do it manually and put all the files in the same directory. 
-   Create two files, you want to compare as a test. Your final view should be like this:
+   Create two files that you want to compare as a test. The resulting directory tree should look like this:
    
    </p>
    
@@ -294,7 +292,7 @@ he whole Gumtree project is in [this repository](https://github.com/GumTreeDiff/
    <p>
    
    Now you can check if this bash script works: 
-   run `./gumtree` command in the terminal with no parameters. If you receive the same message everything is fine so far.
+   run `./gumtree` command in the terminal with no parameters. If you receive this message, then everything is fine:
    
    </p>
    
@@ -313,33 +311,33 @@ he whole Gumtree project is in [this repository](https://github.com/GumTreeDiff/
    <p>
    
    Originally pythonparser came from [this](https://github.com/GumTreeDiff/pythonparser) repository. 
-   But it was modified by us and now you can take it in the current repository.
+   But it was modified by us and now you can use the version from the current repository.
    
    </p>
    
    <p>
    
    - Firstly, download `requirements.txt` from the repository [here](./requirements.txt) and put it in the root of your 
-   _gumtree project_. Install all requirements by running `pip3 install -r requirements.txt` in the IDEA terminal.
+   _gumtree project_. Install all the requirements by running `pip3 install -r requirements.txt` in the IDEA terminal.
    
    </p>
    
    <p>
    
-   - Secondly, take the [pythonparser_3.py](./src/main/python/pythonparser/pythonparser_3.py) 
-   and place it into the `/tmp` directory on your laptop. Rename file into `"pythonparser"`. 
-   Without any extinctions like `".py"`. The type of this file should be "Python 3 script (text/x-python3)" 
-   and exactly like this. If it is different check the header of the file. First line should be `"#!/usr/bin/env python3"`. 
-   Make this file executable, by running `chmod +x /pathToYourFile/pythonparser`.
+   - Secondly, take [pythonparser_3.py](./src/main/python/pythonparser/pythonparser_3.py) 
+   and place it into the `/tmp` directory on your laptop. Rename the file into `"pythonparser"`, 
+   without any extensions like `".py"`. The type of this file should be "Python 3 script (text/x-python3)". 
+   If it is different, check the header of the file. The first line should be `"#!/usr/bin/env python3"`. 
+   Make this file executable by running `chmod +x /pathToYourFile/pythonparser`.
    
    </p>
    
    <p>
    
-   - Now, add the `/tmp` directory to the `gumtree project PATH`. If you want to do it temporarily (before reboot) 
-   then in the gumtree project in `/dist/build/distributions/gumtree-2.1.2/bin` directory open terminal and 
-   insert: `export PATH=$PATH:/tmp`. This command temporary (before reboot) adds `/tmp` to the list of directories, 
-   where your project will check for the parser file. You can check if it is added to the PATH, by using echo `$PATH`. 
+   - Next, add the `/tmp` directory to the `gumtree project PATH`. If you want to do it temporarily (before reboot), 
+   then open the terminal in the GumTree project in `/dist/build/distributions/gumtree-2.1.2/bin` directory 
+   and insert: `export PATH=$PATH:/tmp`. This command temporary (before reboot) adds `/tmp` to the list of directories 
+   where your project will check for the parser file. You can check if it is added to the PATH by using echo `$PATH`. 
    
    </p>
    
@@ -351,7 +349,7 @@ he whole Gumtree project is in [this repository](https://github.com/GumTreeDiff/
    
    <p>
    
-   Now everything is done and you can run your project, using `./gumtree diff file1.py file2.py`.
+   Now everything is done and you can run the project using `./gumtree diff file1.py file2.py`.
    
    </p>
    
