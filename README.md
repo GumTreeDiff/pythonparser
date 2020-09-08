@@ -300,7 +300,7 @@ he whole Gumtree project is in [this repository](https://github.com/GumTreeDiff/
    
    <p>
    
-   <img src="./readme-img/gumtree-message.png" width="300">
+   <img src="./readme-img/gumtree-message.png" width="600">
    
    </p>
     
