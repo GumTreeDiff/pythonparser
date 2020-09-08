@@ -243,3 +243,116 @@ into `ImportFrom` node tag. It follows the `hyphen` character.
   
 *Note*: Token position attributes are: `lineno`, `col`, `end_line_no`, `end_col`.  
  They exist in order to determine the position of the token.
+
+### How to run Gumtree with Python parser
+
+This is a guide on how to use gumtree with python parser.
+he whole Gumtree project is in [this repository](https://github.com/GumTreeDiff/gumtree).
+
+1. Download Gumtree project
+
+   <details><summary>More details</summary>
+	
+   <p>
+
+   The stable version of this project is located [here](https://github.com/GumTreeDiff/gumtree/releases/tag/v2.1.2). 
+   It is `v2.1.2` version, you should download source code. Do not 
+   clone the repository, because it will give you an unstable version.
+   
+   </p>
+    
+   </details>
+   
+2. Build Gumtree project
+
+   <details><summary>More details</summary>
+	
+   <p>
+
+   After you downloaded and extracted the archive, open it as a new IDEA project. While you are in the root, 
+   open the IDEA terminal (console), and build this project by 
+   running `./gradlew build -x test` for UNIX systems and `gradlew.bat build -x test` on Windows 
+   (it can have some troubles with Windows, see an issue [here](https://github.com/GumTreeDiff/gumtree/issues/72)).
+   
+   </p>
+   
+   <p>
+
+   To check if this step is done - in the `/dist` directory new folder `build` should appear. 
+   To get the runnable bash-script you should extract the archive `gumtree-2.1.2.zip` in the 
+   `build/distributions/`. Do it manually and put all the files in the same directory. 
+   Create two files, you want to compare as a test. Your final view should be like this:
+   
+   </p>
+   
+   <p>
+   
+   <img src="./readme-img/gumtree-structure.png" width="300">
+   
+   </p>
+   
+   <p>
+   
+   Now you can check if this bash script works: 
+   run `./gumtree` command in the terminal with no parameters. If you receive the same message everything is fine so far.
+   
+   </p>
+   
+   <p>
+   
+   <img src="./readme-img/gumtree-message.png" width="300">
+   
+   </p>
+    
+   </details>
+   
+3. Add Pythonparser
+
+   <details><summary>More details</summary>
+   
+   <p>
+   
+   Originally pythonparser came from [this](https://github.com/GumTreeDiff/pythonparser) repository. 
+   But it was modified by us and now you can take it in the current repository.
+   
+   </p>
+   
+   <p>
+   
+   - Firstly, download `requirements.txt` from the repository [here](./requirements.txt) and put it in the root of your 
+   _gumtree project_. Install all requirements by running `pip3 install -r requirements.txt` in the IDEA terminal.
+   
+   </p>
+   
+   <p>
+   
+   - Secondly, take the [pythonparser_3.py](./src/main/python/pythonparser/pythonparser_3.py) 
+   and place it into the `/tmp` directory on your laptop. Rename file into `"pythonparser"`. 
+   Without any extinctions like `".py"`. The type of this file should be "Python 3 script (text/x-python3)" 
+   and exactly like this. If it is different check the header of the file. First line should be `"#!/usr/bin/env python3"`. 
+   Make this file executable, by running `chmod +x /pathToYourFile/pythonparser`.
+   
+   </p>
+   
+   <p>
+   
+   - Now, add the `/tmp` directory to the `gumtree project PATH`. If you want to do it temporarily (before reboot) 
+   then in the gumtree project in `/dist/build/distributions/gumtree-2.1.2/bin` directory open terminal and 
+   insert: `export PATH=$PATH:/tmp`. This command temporary (before reboot) adds `/tmp` to the list of directories, 
+   where your project will check for the parser file. You can check if it is added to the PATH, by using echo `$PATH`. 
+   
+   </p>
+   
+   </details>
+   
+4. Run Gumtree with python parser
+
+   <details><summary>More details</summary>
+   
+   <p>
+   
+   Now everything is done and you can run your project, using `./gumtree diff file1.py file2.py`.
+   
+   </p>
+   
+   </details>
