@@ -2,9 +2,6 @@
 
 # Copyright (c) Aniskov N.
 
-import sys
-sys.path.append('../../../..')
-
 import argparse
 import ast
 import logging
