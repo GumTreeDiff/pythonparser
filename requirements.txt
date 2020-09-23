@@ -1,2 +1,1 @@
-jsontree
-asttokens
+parso
