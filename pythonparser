@@ -16,6 +16,9 @@ def main(file):
   print(xml)
 
 def processNode(parsoNode, gumtreeNode):
+  if parsoNode.type == 'error_node':
+    sys.exit(parsoNode)
+
   for parsoChild in parsoNode.children:
     gumtreeChild = toGumtreeNode(parsoChild)
     if gumtreeChild != None:
