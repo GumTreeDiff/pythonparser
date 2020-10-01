@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.8
 
 # Copyright (c) Raychev, V., Bielik, P., and Vechev, M. (see https://eth-sri.github.io/py150)
 # Copyright (c) Victor Quach (see https://github.com/Varal7/pythonparser)
