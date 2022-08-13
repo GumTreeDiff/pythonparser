@@ -66,38 +66,6 @@ class TestPythonParser3:
             except ET.ParseError as e:
                 pytest.fail(f'test file: {entry.path}, ET.ParseError msg: {e}')
 
-    @pytest.mark.parametrize(
-        'test_input_dirs',
-        [
-            os.path.join(_input_dir, 'case_non_valid_python_code')
-        ]
-    )
-    def test_non_valid_python_code(self, test_input_dirs: str) -> None:
-        """
-        Checks behaviour on non valid python code inputs.
-        Expected behaviour: SyntaxError is thrown during parsing
-        """
-        for entry in os.scandir(test_input_dirs):
-            # print(f'Current entry is: {entry.path}') TODO: remove or add logger instead
-            with pytest.raises(SyntaxError):
-                _ = parse_file(entry.path)
-
-    @pytest.mark.parametrize(
-        'test_input_dirs',
-        [
-            os.path.join(_input_dir, 'case_non_valid_python_code')
-        ]
-    )
-    def test_non_valid_python_code(self, test_input_dirs: str) -> None:
-        """
-        Checks behaviour on non valid python code inputs.
-        Expected behaviour: SyntaxError is thrown during parsing
-        """
-        for entry in os.scandir(test_input_dirs):
-            # print(f'Current entry is: {entry.path}') TODO: remove or add logger instead
-            with pytest.raises(SyntaxError):
-                _ = parse_file(entry.path)
-
     @staticmethod
     @pytest.fixture(scope='function',
                     params=[
