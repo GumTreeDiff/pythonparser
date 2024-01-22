@@ -25,41 +25,41 @@ doc = minidom.Document()
 positions = [0]
 
 def main(file):
-  parsoAst = parso.parse(readFile(file))
-  gumtreeAst = toGumtreeNode(parsoAst)
-  doc.appendChild(gumtreeAst)
-  processNode(parsoAst, gumtreeAst)
+  parso_ast = parso.parse(read_file(file))
+  gumtree_ast = to_gumtree_node(parso_ast)
+  doc.appendChild(gumtree_ast)
+  process_node(parso_ast, gumtree_ast)
   xml = doc.toprettyxml()
   print(xml)
 
-def processNode(parsoNode, gumtreeNode):
-  if parsoNode.type == 'error_node':
-    sys.exit(parsoNode)
+def process_node(parso_node, gumtree_node):
+  if parso_node.type == 'error_node':
+    sys.exit(parso_node)
 
-  for parsoChild in parsoNode.children:
-    gumtreeChild = toGumtreeNode(parsoChild)
-    if gumtreeChild != None:
-      gumtreeNode.appendChild(gumtreeChild)
-      if hasattr(parsoChild, 'children'):
-        processNode(parsoChild, gumtreeChild)
+  for parso_child in parso_node.children:
+    gumtree_child = to_gumtree_node(parso_child)
+    if gumtree_child != None:
+      gumtree_node.appendChild(gumtree_child)
+      if hasattr(parso_child, 'children'):
+        process_node(parso_child, gumtree_child)
 
-def toGumtreeNode(parsoNode):
-  if parsoNode.type in ['keyword', 'newline', 'endmarker']:
+def to_gumtree_node(parso_node):
+  if parso_node.type in ['keyword', 'newline', 'endmarker']:
     return
-  if parsoNode.type == 'operator' and parsoNode.value in ['.', '(', ')', '[', ']', ':', ';']:
+  if parso_node.type == 'operator' and parso_node.value in ['.', '(', ')', '[', ']', ':', ';']:
     return
-  gumtreeNode = doc.createElement('tree')
-  gumtreeNode.setAttribute("type", parsoNode.type)
-  startPos = positions[parsoNode.start_pos[0] - 1] + parsoNode.start_pos[1]
-  endPos = positions[parsoNode.end_pos[0] - 1] + parsoNode.end_pos[1]
-  length = endPos - startPos
-  gumtreeNode.setAttribute("pos", str(startPos))
-  gumtreeNode.setAttribute("length", str(length))
-  if (not hasattr(parsoNode, 'children')) or len(parsoNode.children) == 0:
-    gumtreeNode.setAttribute("label", parsoNode.value)
-  return gumtreeNode
+  gumtree_node = doc.createElement('tree')
+  gumtree_node.setAttribute("type", parso_node.type)
+  start_pos = positions[parso_node.start_pos[0] - 1] + parso_node.start_pos[1]
+  end_pos = positions[parso_node.end_pos[0] - 1] + parso_node.end_pos[1]
+  length = end_pos - start_pos
+  gumtree_node.setAttribute("pos", str(start_pos))
+  gumtree_node.setAttribute("length", str(length))
+  if (not hasattr(parso_node, 'children')) or len(parso_node.children) == 0:
+    gumtree_node.setAttribute("label", parso_node.value)
+  return gumtree_node
 
-def readFile(file):
+def read_file(file):
   with open(file, 'r') as file:
     data = file.read()
   index = 0
